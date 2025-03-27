@@ -1,96 +1,79 @@
+/**
+ * @fileoverview GlobeCamera is a custom camera class that extends THREE.PerspectiveCamera
+ * with OrbitControls and additional functionality for interactive 3D globe viewing.
+ * @module GlobeCamera
+ */
+
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import * as CONST from './constants.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { CAMERA } from './constants.js';
 
 /**
- * A specialized camera class for globe visualization with enhanced control features.
- * Extends THREE.PerspectiveCamera and provides automatic resizing and orbit controls.
- *
- * @class
+ * @class GlobeCamera
  * @extends {THREE.PerspectiveCamera}
+ * @description A specialized camera setup for 3D globe visualization with orbit controls.
+ * Uses pre-defined constants from constants.js for configuration, including FOV, near/far planes,
+ * camera position, and control parameters.
  */
 class GlobeCamera extends THREE.PerspectiveCamera {
     /**
-     * Creates a new GlobeCamera instance with orbit controls and automatic resize handling.
-     *
-     * @param {THREE.Renderer} renderer - The WebGL renderer to associate with the camera
-     * @param {HTMLElement} container - The DOM container element for size calculations and resize observation
-     * @throws {Error} Will throw an error if renderer or container is invalid
-     */
-    constructor(renderer, container) {
-        // Initialize base perspective camera with predefined constants
-        super(
-            CONST.CAMERA_FOV,
-            container.clientWidth / container.clientHeight,
-            CONST.CAMERA_NEAR,
-            CONST.CAMERA_FAR
-        );
-
-        // Set initial camera position based on constants
-        this.position.set(...CONST.CAMERA_POSITION);
-        this.lookAt(...CONST.CAMERA_LOOK_AT);
-
-        // Create orbit controls for interactive camera movement
-        this.controls = new OrbitControls(this, renderer.domElement);
-        this.controls.enableDamping = true;
-
-        // Set up resize observer to handle dynamic container resizing
-        this.resizeObserver = new ResizeObserver(this.resize.bind(this));
-        this.resizeObserver.observe(container);
-    }
-
-    /**
-     * Handles camera and renderer resizing based on container dimensions.
-     * Updates camera aspect ratio and renderer size accordingly.
-     *
-     * @param {ResizeObserverEntry[]} [entries] - Array of resize observer entries
-     * @param {ResizeObserverEntry} [entries[0]] - The first resize observer entry
-     * @param {DOMRectReadOnly} [entries[0].contentRect] - The new dimensions of the observed element
-     */
-    resize(entries) {
-        if (entries && entries.length > 0) {
-            const { width, height } = entries[0].contentRect;
-            
-            // Update camera aspect ratio
-            this.aspect = width / height;
-            this.updateProjectionMatrix();
-            
-            // Resize renderer if available
-            if (this.renderer) {
-                this.renderer.setSize(width, height);
-            }
-        }
-    }
-
-    /**
-     * Updates the orbit controls, necessary for smooth camera interaction
-     * when controls.enableDamping is set to true.
+     * Creates a new GlobeCamera instance with orbit controls.
+     * Uses CAMERA constants for FOV, near/far planes, position, and control settings.
      * 
-     * @method
-     * @description Should be called in the animation loop to ensure
-     * smooth camera movement and responsiveness.
+     * @param {THREE.WebGLRenderer} renderer - The renderer used for the scene.
+     * @param {HTMLCanvasElement} canvas - The canvas element for calculating aspect ratio.
+     * @constructor
+     */
+    constructor(renderer, canvas) {
+        super(
+            CAMERA.FOV,
+            canvas.clientWidth / canvas.clientHeight,
+            CAMERA.NEAR,
+            CAMERA.FAR
+        );
+        
+        this.position.set(...CAMERA.INITIAL_POSITION);
+        
+        this.controls = new OrbitControls(this, renderer.domElement);
+        this.controls.enableDamping = CAMERA.CONTROLS.DAMPING;
+        this.controls.dampingFactor = CAMERA.CONTROLS.DAMPING_FACTOR;
+        this.controls.minDistance = CAMERA.CONTROLS.MIN_DISTANCE;
+        this.controls.maxDistance = CAMERA.CONTROLS.MAX_DISTANCE;
+        this.controls.minPolarAngle = CAMERA.CONTROLS.MIN_POLAR_ANGLE;
+        this.controls.maxPolarAngle = CAMERA.CONTROLS.MAX_POLAR_ANGLE;
+    }
+
+    /**
+     * Updates the camera controls. Should be called in the animation loop.
+     * Benefits from CAMERA.CONTROLS.DAMPING setting when enabled.
+     * 
+     * @returns {void}
      */
     update() {
         this.controls.update();
     }
 
     /**
-     * Cleans up resources associated with the camera.
-     * Stops resize observation and disposes of orbit controls.
-     *
-     * @description This method should be called when the camera is no longer needed
-     * to prevent memory leaks and remove event listeners.
+     * Updates the camera's aspect ratio and projection matrix based on new dimensions.
+     * Should be called when the canvas is resized.
+     * 
+     * @param {number} width - The new width in pixels.
+     * @param {number} height - The new height in pixels.
+     * @returns {void}
+     */
+    updateAspect(width, height) {
+        this.aspect = width / height;
+        this.updateProjectionMatrix();
+    }
+
+    /**
+     * Cleans up resources used by this camera.
+     * Should be called when the component using this camera is unmounted.
+     * 
+     * @returns {void}
      */
     dispose() {
-        // Stop observing resize events
-        if (this.resizeObserver && this.container) {
-            this.resizeObserver.unobserve(this.container);
-        }
-        
-        // Dispose of orbit controls
-        if (this.controls) {
-            this.controls.dispose();
-        }
+        this.controls.dispose();
     }
 }
 
