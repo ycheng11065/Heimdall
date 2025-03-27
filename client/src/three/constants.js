@@ -3,6 +3,7 @@ export const CAMERA = {
     NEAR: 0.1,                          // min distance clipping
     FAR: 1000,                          // max distance clipping    
     INITIAL_POSITION: [0, 0, 3],
+    LOOK_AT: [0, 0, 0],
     CONTROLS: {
         DAMPING: true,                  // inertia damping
         DAMPING_FACTOR: 0.05,

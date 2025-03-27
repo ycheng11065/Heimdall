@@ -33,6 +33,7 @@ class GlobeCamera extends THREE.PerspectiveCamera {
         );
         
         this.position.set(...CAMERA.INITIAL_POSITION);
+        this.lookAt(...CAMERA.LOOK_AT);
         
         this.controls = new OrbitControls(this, renderer.domElement);
         this.controls.enableDamping = CAMERA.CONTROLS.DAMPING;

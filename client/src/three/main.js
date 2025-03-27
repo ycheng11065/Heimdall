@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import GlobeCamera from './camera.js';
+import earthTexture from '../assets/earth.jpg';
 
-export function main(canvas) {
+export const main = (canvas) => {
     if (!canvas) {
         console.error('Canvas element not found');
         return;
@@ -13,63 +14,51 @@ export function main(canvas) {
     const scene = new THREE.Scene();
     const camera = new GlobeCamera(renderer, canvas);
 
-    function onWindowResize() {
+    const onWindowResize = () => {
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
 
         renderer.setSize(width, height, false);
-
         camera.updateAspect(width, height);
     }
 
     window.addEventListener('resize', onWindowResize);
-    onWindowResize();
 
-    // Create objects for the scene
-    const boxWidth = 1;
-    const boxHeight = 1;
-    const boxDepth = 1;
-    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-    const material = new THREE.MeshPhongMaterial({color: 0x44aa88});
-    const cube = new THREE.Mesh(geometry, material);
+    const textureLoader = new THREE.TextureLoader();
 
-    // Add lighting
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
+    const material = new THREE.MeshBasicMaterial({
+        map: textureLoader.load(earthTexture),
+    });
+    const earth = new THREE.Mesh(geometry, material);
+
     const color = 0xFFFFFF;
     const intensity = 3;
     const light = new THREE.DirectionalLight(color, intensity);
     light.position.set(-1, 2, 4);
     scene.add(light);
-    scene.add(cube);
 
-    // Initial render
+    scene.add(earth);
+
     renderer.render(scene, camera);
 
-    // Animation loop
     function render(time) {
-    time *= 0.001; // convert time to seconds
+        time *= 0.001; // convert time to seconds
 
-    // Rotate the cube
-    cube.rotation.x = time;
-    cube.rotation.y = time;
+        renderer.render(scene, camera);
+        camera.update();
 
-    // Render the scene
-    renderer.render(scene, camera);
-    camera.update();
-
-    // Continue animation
-    animationFrameId = requestAnimationFrame(render);
+        animationFrameId = requestAnimationFrame(render);
     }
 
-    // Start animation
     let animationFrameId = requestAnimationFrame(render);
 
-    // Return cleanup function
     return () => {
-    window.removeEventListener('resize', onWindowResize);
-    cancelAnimationFrame(animationFrameId);
-    camera.dispose();
-    geometry.dispose();
-    material.dispose();
-    renderer.dispose();
+        window.removeEventListener('resize', onWindowResize);
+        cancelAnimationFrame(animationFrameId);
+        camera.dispose();
+        geometry.dispose();
+        material.dispose();
+        renderer.dispose();
     };
 }
