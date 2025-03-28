@@ -1,5 +1,7 @@
 package com.application.server.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
