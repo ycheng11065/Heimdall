@@ -3,6 +3,7 @@ package com.application.server.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 public class Satellite {
@@ -25,7 +26,7 @@ public class Satellite {
     private LocalDate decayDate;
 
     @JsonProperty("EPOCH")
-    private OffsetDateTime epoch;
+    private LocalDateTime epoch;
 
     @JsonProperty("TLE_LINE1")
     private String tleLine1;

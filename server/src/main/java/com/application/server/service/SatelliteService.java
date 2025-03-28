@@ -25,7 +25,7 @@ public class SatelliteService {
 
     public Flux<Satellite> getAllSatelliteData() {
         String allSatelliteData =
-                "/basicspacedata/query/class/gp/decay_date/null-val/epoch/%3Enow-30/orderby/norad_cat_id/format/json";
+                "/basicspacedata/query/class/gp/decay_date/null-val/epoch/>now-30/orderby/norad_cat_id/format/json";
 
         return authService.login()
                 .flatMapMany(cookie ->

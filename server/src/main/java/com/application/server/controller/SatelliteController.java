@@ -18,10 +18,10 @@ public class SatelliteController {
         this.satelliteService = satelliteService;
     }
 
-    @GetMapping("/{id}")
-    public Mono<Satellite> getSatellite() {
-
-    }
+//    @GetMapping("/{id}")
+//    public Mono<Satellite> getSatellite() {
+//
+//    }
 
     @GetMapping
     public Flux<Satellite> getAllSatellites() {
