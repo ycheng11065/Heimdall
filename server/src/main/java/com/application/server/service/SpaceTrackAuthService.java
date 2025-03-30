@@ -1,5 +1,6 @@
 package com.application.server.service;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -13,9 +14,12 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class SpaceTrackAuthService {
 
-    private final WebClient webClient;
-    private final String SPACE_TRACK_URL = "https://www.space-track.org/";
+    private final WebClient.Builder webClientBuilder;
+    private WebClient webClient;
     private String sessionCookie;
+
+    @Value("${spacetrack.base}")
+    private String baseUrl;
 
     @Value("${spacetrack.username}")
     private String username;
@@ -24,24 +28,24 @@ public class SpaceTrackAuthService {
     private String password;
 
     public SpaceTrackAuthService(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl(SPACE_TRACK_URL).build();
+        this.webClientBuilder = webClientBuilder;
+    }
+
+    @PostConstruct
+    private void init() {
+        this.webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 
     public Mono<String> login() {
-        System.out.println("🔐 login() called");
         if (sessionCookie != null) {
             return Mono.just(sessionCookie);
         }
 
-//        String encodedUsername = URLEncoder.encode(username, StandardCharsets.UTF_8);
-//        String encodedPassword = URLEncoder.encode(password, StandardCharsets.UTF_8);
-//        String body = "identity=" + encodedUsername + "&password=" + encodedPassword;
-////        String body = "identity=" + username + "&password=" + password;
-//        System.out.println("🔐 login() called " + body);
+        System.out.println("Logging in to SpaceTrack");
 
-
-        String body = "identity=" + URLEncoder.encode(username, StandardCharsets.UTF_8)
-                + "&password=" + URLEncoder.encode(password, StandardCharsets.UTF_8);
+        String encodedUsername =  URLEncoder.encode(username, StandardCharsets.UTF_8);
+        String encodePassword = URLEncoder.encode(password, StandardCharsets.UTF_8);
+        String body = "identity=" + encodedUsername + "&password=" + encodePassword;
 
         return webClient.post()
                 .uri("/ajaxauth/login")
@@ -54,12 +58,12 @@ public class SpaceTrackAuthService {
                                 .getFirst(HttpHeaders.SET_COOKIE);
                         this.sessionCookie = cookie;
 
-                        System.out.println("🟢 Using session cookie: " + cookie);
+                        System.out.println("Using session cookie: " + cookie);
                         return Mono.just(cookie);
                     } else {
                         return response.bodyToMono(String.class)
                                 .flatMap(errorBody -> {
-                                    System.err.println("❌ Login failed:\n" + errorBody);
+                                    System.err.println("Login failed:\n" + errorBody);
                                     return Mono.error(new RuntimeException("Login failed: " + response.statusCode()));
                                 });
                     }
