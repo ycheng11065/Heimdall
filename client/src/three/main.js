@@ -1,10 +1,14 @@
 import * as THREE from 'three';
 import GlobeCamera from './camera.js';
-import earthTexture from '../assets/earth.jpg';
 import vertexShader from './shaders/vertex.vert';
 import fragmentShader from './shaders/fragment.frag';
 
 export const main = async (canvas) => {
+
+    /**********************************************/
+    /* Canvas, window, camera, and renderer setup */
+    /**********************************************/
+
     if (!canvas) {
         console.error('Canvas element not found');
         return;
@@ -26,18 +30,27 @@ export const main = async (canvas) => {
 
     window.addEventListener('resize', onWindowResize);
 
-    // Create a shader-based material for a sphere with a partial texture
+
+    
+    // Load the GeoJSON file
+    const geojson = await fetch('ne_110m_coastline/ne_110m_coastline.geojson');
+    const geojsonData = await geojson.json();
+    console.log(geojsonData);
+
+
+
+
+
+
+    // // Create a shader-based material for a sphere with a partial texture
     const geometry = new THREE.SphereGeometry(1, 32, 32);
 
-    const textureLoader = new THREE.TextureLoader();
-
     const material = new THREE.ShaderMaterial({
-    uniforms: {
-        textureMap: { value: textureLoader.load(earthTexture) },
-        baseColor: { value: new THREE.Color(0x00aa00) } // Green color
-    },
-    vertexShader: vertexShader,
-    fragmentShader: fragmentShader
+        uniforms: {
+            baseColor: { value: new THREE.Color(0x00aa00) } // Green color
+        },
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader
     });
 
     // Create the sphere with the shader material
