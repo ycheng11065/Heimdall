@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import GlobeCamera from './camera.js';
 import earthTexture from '../assets/earth.jpg';
+import vertexShader from './shaders/vertex.vert';
+import fragmentShader from './shaders/fragment.frag';
 
-export const main = (canvas) => {
+export const main = async (canvas) => {
     if (!canvas) {
         console.error('Canvas element not found');
         return;
@@ -24,26 +26,26 @@ export const main = (canvas) => {
 
     window.addEventListener('resize', onWindowResize);
 
+    // Create a shader-based material for a sphere with a partial texture
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
+
     const textureLoader = new THREE.TextureLoader();
 
-    const geometry = new THREE.SphereGeometry(1, 32, 32);
-    const material = new THREE.MeshBasicMaterial({
-        map: textureLoader.load(earthTexture),
+    const material = new THREE.ShaderMaterial({
+    uniforms: {
+        textureMap: { value: textureLoader.load(earthTexture) },
+        baseColor: { value: new THREE.Color(0x00aa00) } // Green color
+    },
+    vertexShader: vertexShader,
+    fragmentShader: fragmentShader
     });
+
+    // Create the sphere with the shader material
     const earth = new THREE.Mesh(geometry, material);
-
-    const color = 0xFFFFFF;
-    const intensity = 3;
-    const light = new THREE.DirectionalLight(color, intensity);
-    light.position.set(-1, 2, 4);
-    scene.add(light);
-
     scene.add(earth);
 
-    renderer.render(scene, camera);
-
-    function render(time) {
-        time *= 0.001; // convert time to seconds
+    function render(/*time*/) {
+        // time *= 0.001; // convert time to seconds
 
         renderer.render(scene, camera);
         camera.update();
@@ -62,3 +64,4 @@ export const main = (canvas) => {
         renderer.dispose();
     };
 }
+  
