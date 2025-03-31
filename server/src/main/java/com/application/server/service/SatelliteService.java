@@ -1,6 +1,9 @@
 package com.application.server.service;
 
 import com.application.server.model.Satellite;
+import com.application.server.model.SatelliteEntity;
+import com.application.server.model.SatelliteMapper;
+import com.application.server.repository.SatelliteRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,8 +37,9 @@ public class SatelliteService {
     );
 
     private final WebClient.Builder webClientBuilder;
-    private WebClient webClient;
     private final SpaceTrackAuthService authService;
+    private final SatelliteRepository satelliteRepository;
+    private WebClient webClient;
 
     @Value("${spacetrack.base}")
     private String baseUrl;
@@ -53,10 +57,15 @@ public class SatelliteService {
     private String iridiumSatellitesEndpoint;
 
     // Injecting WebClient.Builder dependency
-    public SatelliteService(WebClient.Builder webClientBuilder, SpaceTrackAuthService authService) {
+    public SatelliteService(
+            WebClient.Builder webClientBuilder,
+            SpaceTrackAuthService authService,
+            SatelliteRepository satelliteRepository) {
+
         // Set API base URL
         this.webClientBuilder = webClientBuilder;
         this.authService = authService;
+        this.satelliteRepository = satelliteRepository;
     }
 
     @PostConstruct
@@ -118,5 +127,10 @@ public class SatelliteService {
                                 .retrieve()
                                 .bodyToFlux(Satellite.class)
                 );
+    }
+
+    public Mono<SatelliteEntity> saveSatelliteToDb(Satellite satellite) {
+        SatelliteEntity entity = SatelliteMapper.toEntity(satellite);
+        return satelliteRepository.save(entity);
     }
 }

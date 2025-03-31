@@ -1,11 +1,9 @@
 package com.application.server.controller;
 
 import com.application.server.model.Satellite;
+import com.application.server.model.SatelliteEntity;
 import com.application.server.service.SatelliteService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -17,6 +15,11 @@ public class SatelliteController {
 
     public SatelliteController(SatelliteService satelliteService) {
         this.satelliteService = satelliteService;
+    }
+
+    @PostMapping
+    public Mono<SatelliteEntity> saveSatelliteToDb(@RequestBody Satellite satellite) {
+        return satelliteService.saveSatelliteToDb(satellite);
     }
 
     @GetMapping
