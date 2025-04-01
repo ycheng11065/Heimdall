@@ -35,6 +35,8 @@ class GlobeCamera extends THREE.PerspectiveCamera {
         this.position.set(...CAMERA.INITIAL_POSITION);
         this.lookAt(...CAMERA.LOOK_AT);
         
+        this.zoomRange = CAMERA.CONTROLS.MAX_DISTANCE - CAMERA.CONTROLS.MIN_DISTANCE;
+
         this.controls = new OrbitControls(this, renderer.domElement);
         this.controls.enableDamping = CAMERA.CONTROLS.DAMPING;
         this.controls.dampingFactor = CAMERA.CONTROLS.DAMPING_FACTOR;
@@ -42,6 +44,26 @@ class GlobeCamera extends THREE.PerspectiveCamera {
         this.controls.maxDistance = CAMERA.CONTROLS.MAX_DISTANCE;
         this.controls.minPolarAngle = CAMERA.CONTROLS.MIN_POLAR_ANGLE;
         this.controls.maxPolarAngle = CAMERA.CONTROLS.MAX_POLAR_ANGLE;
+
+        // end event for to adjust rotation at end of camera manipulation
+        this.controls.addEventListener('end', this.#adjustRotationSpeed.bind(this));
+
+        this.#adjustRotationSpeed();
+    }
+
+    /**
+     * @private
+     * @description Adjusts the rotation speed of the camera controls based on the current distance.
+     * A non-linear adjustment that makes rotation slower when zoomed in (for precision)
+     * and faster when zoomed out (for easier navigation).
+     * 
+     * @returns {void}
+     */
+    #adjustRotationSpeed() {
+        const distance = this.position.distanceTo(this.controls.target);
+        const minDistance = CAMERA.CONTROLS.MIN_DISTANCE;
+        const currentRelativeDistance = (distance - minDistance) / this.zoomRange;
+        this.controls.rotateSpeed = 0.01 + 0.5 * currentRelativeDistance;
     }
 
     /**
