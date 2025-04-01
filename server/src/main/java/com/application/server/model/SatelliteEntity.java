@@ -30,6 +30,10 @@ public class SatelliteEntity {
     private double periapsis;
     private double semimajorAxis;
 
+    public UUID getId() {
+        return id;
+    }
+
     public void setSemimajorAxis(double semimajorAxis) {
         this.semimajorAxis = semimajorAxis;
     }
