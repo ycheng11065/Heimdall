@@ -2,10 +2,13 @@ package com.application.server.controller;
 
 import com.application.server.model.Satellite;
 import com.application.server.model.SatelliteEntity;
+import com.application.server.model.SatelliteMapper;
 import com.application.server.service.SatelliteService;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/satellites")
@@ -20,6 +23,11 @@ public class SatelliteController {
     @PostMapping
     public Mono<SatelliteEntity> saveSatelliteToDb(@RequestBody Satellite satellite) {
         return satelliteService.saveSatelliteToDb(satellite);
+    }
+
+    @PostMapping("/batch")
+    public Flux<SatelliteEntity> saveSatelliteToDb(@RequestBody List<Satellite> satellites) {
+        return satelliteService.saveAllSatelliteToDb(Flux.fromIterable(satellites));
     }
 
     @GetMapping

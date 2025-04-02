@@ -133,4 +133,8 @@ public class SatelliteService {
         SatelliteEntity entity = SatelliteMapper.toEntity(satellite);
         return satelliteRepository.save(entity);
     }
+
+    public Flux<SatelliteEntity> saveAllSatelliteToDb(Flux<Satellite> satellites) {
+        return satellites.map(SatelliteMapper::toEntity).flatMap(satelliteRepository::save);
+    }
 }
