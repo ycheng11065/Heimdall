@@ -1,7 +1,6 @@
-import { llToVector3 } from "./utils.js";
+import { llToVector3, findOppositePoint, rotatePointsForProjection, stereographicProjection, triangulate2DPoints } from "./utils.js";
 import { GEO_FEATURE, GLOBE } from "../constants.js";
 import * as THREE from "three";
-import earcut from "earcut";
 
 export const renderGeoLines = (data, scene, geoFeature) => {
     const features = data.features;
@@ -12,7 +11,7 @@ export const renderGeoLines = (data, scene, geoFeature) => {
 
             feature.geometry.coordinates.forEach(coord => {
                 const [longitude, latitude] = coord;
-                const point = llToVector3(latitude, longitude, GLOBE.RADIUS + 0.001); // .001 to be slightly above globe
+                const point = llToVector3(latitude, longitude, GLOBE.RADIUS + 0.01); // .001 to be slightly above globe
                 points.push(point);
             });
 
@@ -41,62 +40,71 @@ export const renderGeoLines = (data, scene, geoFeature) => {
     });
 }
 
+// Improved rendering for continent-sized polygons using stereographic projection
 export const renderGeoPolygons = (data, scene, geoFeature) => {
     const features = data.features;
-    
+
     features.forEach(feature => {
         if (feature.geometry.type === "Polygon") {
-            const positions = [];
-            const flatPositions = [];
-            
-            feature.geometry.coordinates[0].forEach(coord => {
-                const [longitude, latitude] = coord;
-                const point = llToVector3(latitude, longitude, 1.002); 
-                positions.push(point);
-                flatPositions.push(point.x, point.y, point.z);
-            });
-            
-            
-            const vertices = [];
-            const holeIndices = [];
-            
-            const projectedPoints = THREE.projectToPlane(positions);
-            
-            projectedPoints.forEach(pt => {
-                vertices.push(pt.x, pt.y);
-            });
-            
-            const indices = earcut(vertices, holeIndices);
-            
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(flatPositions, 3));
-            geometry.setIndex(indices);
-            geometry.computeVertexNormals();
+            const coordinates = feature.geometry.coordinates[0];
 
-            let colour;
+            // Create a triangulated spherical polygon using the Red Blob Games approach
+            const shape = createSphericalPolygonWithStereographic(coordinates, GLOBE.RADIUS);
+
+            let color;
             switch (geoFeature) {
                 case GEO_FEATURE.OCEANS:
-                    colour = 0x0000FF;
-                    break;
+                    color = 0x0077be; // Deeper blue for oceans
+                break;
                 case GEO_FEATURE.LAKES:
-                    colour = 0x00FFFF;
-                    break;
+                    color = 0x00FFFF;
+                break;
                 case GEO_FEATURE.LAND:
-                    colour = 0x00FF00;
-                    break;
+                    color = 0x00FF00;
+                break;
                 default:
-                    colour = 0xFFFFFF;
+                    color = 0xFFFFFF;
             }
-            
+
             const material = new THREE.MeshBasicMaterial({
-                color: colour,
+                color: color,
                 transparent: true,
-                opacity: 0.6,
+                opacity: 0.8,
                 side: THREE.DoubleSide
             });
-            
-            const mesh = new THREE.Mesh(geometry, material);
+
+            const mesh = new THREE.Mesh(shape, material);
             scene.add(mesh);
         }
     });
+};
+  
+// Create a properly triangulated spherical polygon using the Red Blob Games approach
+function createSphericalPolygonWithStereographic(coordinates, radius) {
+
+    const points3D = [];
+    coordinates.forEach(coord => {
+        const [longitude, latitude] = coord;
+        const point = llToVector3(latitude, longitude, radius);
+        points3D.push(point.x, point.y, point.z);
+    });
+    
+    const oppositePoint = findOppositePoint(points3D);
+    
+    const rotatedPoints = rotatePointsForProjection(points3D, oppositePoint);
+    
+    const projectedPoints = stereographicProjection(rotatedPoints);
+
+    const triangulationResult = triangulate2DPoints(projectedPoints);
+    
+    const geometry = new THREE.BufferGeometry();
+    
+    const originalPoints = new Float32Array(points3D);
+    geometry.setAttribute('position', new THREE.BufferAttribute(originalPoints, 3));
+    
+    geometry.setIndex(triangulationResult.indices);
+    
+    geometry.computeVertexNormals();
+    
+    return geometry;
 }

@@ -1,5 +1,5 @@
-import { Vector3, Vector2 } from 'three';
-
+import { Vector3, Quaternion, Matrix4 } from 'three';
+import Delaunator from 'delaunator';
 /**
  * Converts latitude and longitude coordinates to a 3D vector position on a sphere.
  * 
@@ -28,55 +28,94 @@ export const llToVector3 = (lat, lon, radius) => {
     return new Vector3(x, y, z);
 }
 
-/**
- * Projects an array of 3D points onto a 2D plane.
- * The plane is determined by fitting to the provided points, with the normal 
- * pointing towards the center of the points.
- * 
- * @param {Array<THREE.Vector3>} points - Array of 3D vectors to project.
- * @returns {Array<THREE.Vector2>} Array of 2D vectors representing the projected points.
- * @throws {Error} If there's an error during projection.
- * 
- * @example
- * // Project an array of 3D points onto a 2D plane
- * const points3D = [new THREE.Vector3(1, 2, 3), new THREE.Vector3(4, 5, 6), new THREE.Vector3(7, 8, 9)];
- * const points2D = projectToPlane(points3D);
- */
-export const projectToPlane = (points) => {
-    if (points.length < 3) {
-        console.warn('Not enough points to project to a plane');
-        return [];
+export const findOppositePoint = (points) => {
+    let sumX = 0, sumY = 0, sumZ = 0;
+    const numPoints = points.length / 3;
+
+    for (let i = 0; i < numPoints; i++) {
+        sumX += points[i * 3];
+        sumY += points[i * 3 + 1];
+        sumZ += points[i * 3 + 2];
     }
 
-    try {
-        // calculate origin and normal of the plane
-        const center = new Vector3();
-        points.forEach(p => center.add(p));
-        center.divideScalar(points.length);
-        const normal = center.clone().normalize();
+    const avgX = sumX / numPoints;
+    const avgY = sumY / numPoints;
+    const avgZ = sumZ / numPoints;
+
+    const length = Math.sqrt(avgX * avgX + avgY * avgY + avgZ * avgZ);
+
+    return {
+        x: -avgX / length,
+        y: -avgY / length,
+        z: -avgZ / length
+    };
+}
+
+export const rotatePointsForProjection = (points, oppositePoint) => {
+    const fromVector = new Vector3(
+        oppositePoint.x, 
+        oppositePoint.y, 
+        oppositePoint.z
+    );
+    
+    const toVector = new Vector3(0, 0, -1);
+    
+    const quaternion = new Quaternion();
+    quaternion.setFromUnitVectors(fromVector.normalize(), toVector);
+    
+    const rotationMatrix = new Matrix4();
+    rotationMatrix.makeRotationFromQuaternion(quaternion);
+    
+    const numPoints = points.length / 3;
+    const rotatedPoints = new Float32Array(points.length);
+    
+    for (let i = 0; i < numPoints; i++) {
+        const point = new Vector3(
+            points[i * 3],
+            points[i * 3 + 1],
+            points[i * 3 + 2]
+        );
+      
+        point.applyMatrix4(rotationMatrix);
         
-        // find two orthogonal vectors in the plane which are orthogonal to the normal
-        // make sure the normal is not parallel a coordinate axis
-        const tempVec = new Vector3(1, 0, 0);
-        if (Math.abs(normal.dot(tempVec)) > 0.9) {
-            tempVec.set(0, 1, 0);
-        }
-
-        // cross the normal with the temp vector to get one axis
-        // then cross the normal with that axis to get the other axis
-        const xAxis = new Vector3().crossVectors(normal, tempVec).normalize();
-        const yAxis = new Vector3().crossVectors(normal, xAxis).normalize();
-
-        // project points onto the plane
-        return points.map(p => {
-            const relativePoint = p.clone().sub(center); // translate to new origin
-            return new Vector2(
-                relativePoint.dot(xAxis), // project onto x-axis
-                relativePoint.dot(yAxis)  // project onto y-axis
-            );
-        });
-    } catch (error) {
-        console.error('Error in projectToPlane:', error);
-        return [];
+        rotatedPoints[i * 3] = point.x;
+        rotatedPoints[i * 3 + 1] = point.y;
+        rotatedPoints[i * 3 + 2] = point.z;
     }
+    
+    return rotatedPoints;
+}
+
+export const stereographicProjection = (points) => {
+    const numPoints = points.length / 3;
+    const projectedPoints = [];
+
+    for (let i = 0; i < numPoints; i++) {
+        const x = points[i * 3];
+        const y = points[i * 3 + 1];
+        const z = points[i * 3 + 2];
+        
+        const scale = 1 / (1 + z);
+        projectedPoints.push(x * scale, y * scale);
+    }
+
+    return projectedPoints;
+}
+
+export const triangulate2DPoints = (points2D) => {
+    const delaunatorPoints = [];
+    const numPoints = points2D.length / 2;
+    
+    for (let i = 0; i < numPoints; i++) {
+      delaunatorPoints.push([
+        points2D[i * 2],     // x coordinate
+        points2D[i * 2 + 1]  // y coordinate
+      ]);
+    }
+    
+    const delaunay = new Delaunator(delaunatorPoints.flat());
+    
+    const indices = Array.from(delaunay.triangles);
+    
+    return { indices, delaunay };
 }
