@@ -1,5 +1,7 @@
 package com.application.server.model;
 
+import reactor.core.publisher.Flux;
+
 import java.util.UUID;
 
 public class SatelliteMapper {
@@ -7,7 +9,6 @@ public class SatelliteMapper {
     public static SatelliteEntity toEntity(Satellite satellite) {
         SatelliteEntity entity = new SatelliteEntity();
 
-//        entity.setId(UUID.randomUUID()); // You can swap this for deterministic ID if needed
         entity.setNoradCatId(satellite.getNoradCatId());
         entity.setObjectName(satellite.getObjectName());
         entity.setObjectType(satellite.getObjectType());
