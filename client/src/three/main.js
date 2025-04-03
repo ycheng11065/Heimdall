@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import GlobeCamera from './camera.js';
-import { renderGeoLines, renderGeoPolygons } from './geometry/globeGeoRenderers.js';
+import { renderGeoPolygons } from './geometry/globeGeoRenderers.js';
 import { GEO_FEATURE } from './constants.js';
 import Globe from './globes/globe.js';
 
@@ -36,13 +36,14 @@ export const main = async (canvas) => {
     /**********************************************/
 
     const globe = new Globe(10, 64);
+    scene.add(globe.getMesh());
 
     /**********************************************/
     /*              Base lines setup              */
     /**********************************************/
 
 
-    fetchGeoJSON('ne_110m_land').then(geojson => {
+    fetchGeoJSON('test').then(geojson => {
         renderGeoPolygons(geojson, scene, GEO_FEATURE.LAND);
     }).catch(error => {
         console.error('Error processing GeoJSON:', error);

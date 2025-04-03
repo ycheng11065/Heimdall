@@ -23,6 +23,7 @@ class Globe {
     _createMaterial() {
         const material = new MeshBasicMaterial({
             color: 0x14b1d9,
+            wireframe: true,
         });
         return material;
     }
