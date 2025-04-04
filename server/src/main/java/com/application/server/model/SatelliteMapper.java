@@ -2,13 +2,14 @@ package com.application.server.model;
 
 import reactor.core.publisher.Flux;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class SatelliteMapper {
 
     public static SatelliteEntity toEntity(Satellite satellite) {
         SatelliteEntity entity = new SatelliteEntity();
-
+        entity.setLastUpdate(LocalDateTime.now());
         entity.setNoradCatId(satellite.getNoradCatId());
         entity.setObjectName(satellite.getObjectName());
         entity.setObjectType(satellite.getObjectType());

@@ -1,8 +1,8 @@
 package com.application.server.controller;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
 import com.application.server.model.Satellite;
 import com.application.server.model.SatelliteEntity;
-import com.application.server.model.SatelliteMapper;
 import com.application.server.service.SatelliteService;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -63,5 +63,11 @@ public class SatelliteController {
     @GetMapping("/norad/{noradId}")
     public Flux<Satellite> getHistoricalSatellites(@PathVariable int noradId) {
         return satelliteService.getNORADSatelliteData(noradId);
+    }
+
+    @GetMapping("/all/populate")
+    public Flux<SatelliteEntity> populateAllSatellites() {
+
+        return satelliteService.populateAllSatellites();
     }
 }

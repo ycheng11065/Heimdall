@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS satellites (
     country_code VARCHAR(10),
     launch_date DATE,
     decay_date DATE,
+    last_update TIMESTAMP,
     epoch TIMESTAMP,
     tle_line1 TEXT,
     tle_line2 TEXT,
