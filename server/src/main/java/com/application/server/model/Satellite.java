@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 public class Satellite {
     @JsonProperty("NORAD_CAT_ID")
@@ -51,6 +50,16 @@ public class Satellite {
 
     @JsonProperty("SEMIMAJOR_AXIS")
     private double semimajorAxis;
+
+//    private LocalDateTime lastUpdate;
+//
+//    public void setLastUpdate(LocalDateTime lastUpdate) {
+//        this.lastUpdate = lastUpdate;
+//    }
+
+//    public LocalDateTime getLastUpdate() {
+//        return lastUpdate;
+//    }
 
     public int getNoradCatId() {
         return noradCatId;

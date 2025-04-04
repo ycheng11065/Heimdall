@@ -13,7 +13,6 @@ public class SatelliteEntity {
     // Marks primary key column
     @Id
     private UUID id;
-
     private int noradCatId;
     private String objectName;
     private String objectType;
@@ -21,6 +20,7 @@ public class SatelliteEntity {
     private LocalDate launchDate;
     private LocalDate decayDate;
     private LocalDateTime epoch;
+    private LocalDateTime lastUpdate;
     private String tleLine1;
     private String tleLine2;
     private double inclination;
@@ -32,6 +32,70 @@ public class SatelliteEntity {
 
     public UUID getId() {
         return id;
+    }
+
+    public int getNoradCatId() {
+        return noradCatId;
+    }
+
+    public String getObjectName() {
+        return objectName;
+    }
+
+    public String getObjectType() {
+        return objectType;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public LocalDate getLaunchDate() {
+        return launchDate;
+    }
+
+    public LocalDate getDecayDate() {
+        return decayDate;
+    }
+
+    public LocalDateTime getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public LocalDateTime getEpoch() {
+        return epoch;
+    }
+
+    public String getTleLine1() {
+        return tleLine1;
+    }
+
+    public String getTleLine2() {
+        return tleLine2;
+    }
+
+    public double getInclination() {
+        return inclination;
+    }
+
+    public double getEccentricity() {
+        return eccentricity;
+    }
+
+    public double getPeriod() {
+        return period;
+    }
+
+    public double getApoapsis() {
+        return apoapsis;
+    }
+
+    public double getPeriapsis() {
+        return periapsis;
+    }
+
+    public double getSemimajorAxis() {
+        return semimajorAxis;
     }
 
     public void setSemimajorAxis(double semimajorAxis) {
@@ -92,6 +156,10 @@ public class SatelliteEntity {
 
     public void setNoradCatId(int noradCatId) {
         this.noradCatId = noradCatId;
+    }
+
+    public void setLastUpdate(LocalDateTime lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 
     public void setId(UUID id) {

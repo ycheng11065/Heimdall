@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import org.springframework.http.HttpHeaders;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -131,10 +132,56 @@ public class SatelliteService {
 
     public Mono<SatelliteEntity> saveSatelliteToDb(Satellite satellite) {
         SatelliteEntity entity = SatelliteMapper.toEntity(satellite);
+        System.out.println("test");
         return satelliteRepository.save(entity);
     }
 
     public Flux<SatelliteEntity> saveAllSatelliteToDb(Flux<Satellite> satellites) {
         return satellites.map(SatelliteMapper::toEntity).flatMap(satelliteRepository::save);
     }
+
+    public Flux<SatelliteEntity> populateAllSatellites() {
+        return querySatelliteGroup(allActiveSatellitesEndpoint).transform(this::saveAllSatelliteToDb)
+                .doOnNext(e -> System.out.println("Saved: " + e.getObjectName()));
+    }
+
+    public Flux<Satellite> updateAllSatellites() {
+        return querySatelliteGroup(allActiveSatellitesEndpoint);
+    }
+
+    /** ...
+     *
+     *
+     */
+    public Mono<SatelliteEntity> updateSatelliteData(Satellite updatedSatellite) {
+        return satelliteRepository.findByNoradCatId(updatedSatellite.getNoradCatId())
+                .flatMap(existing -> {
+                    boolean tleChanged = !existing.getTleLine1().equals(updatedSatellite.getTleLine1()) ||
+                            !existing.getTleLine2().equals(updatedSatellite.getTleLine2());
+
+                    if (!tleChanged) {
+                        return Mono.empty(); // nothing to update
+                    }
+
+                    // Update changing info
+                    existing.setTleLine1(updatedSatellite.getTleLine1());
+                    existing.setTleLine2(updatedSatellite.getTleLine2());
+                    existing.setEpoch(updatedSatellite.getEpoch());
+                    existing.setObjectName(updatedSatellite.getObjectName());
+                    existing.setObjectType(updatedSatellite.getObjectType());
+                    existing.setCountryCode(updatedSatellite.getCountryCode());
+                    existing.setDecayDate(updatedSatellite.getDecayDate());
+                    existing.setEpoch(updatedSatellite.getEpoch());
+                    existing.setInclination(updatedSatellite.getInclination());
+                    existing.setEccentricity(updatedSatellite.getEccentricity());
+                    existing.setPeriod(updatedSatellite.getPeriod());
+                    existing.setApoapsis(updatedSatellite.getApoapsis());
+                    existing.setPeriapsis(updatedSatellite.getPeriapsis());
+                    existing.setSemimajorAxis(updatedSatellite.getSemimajorAxis());
+                    existing.setLastUpdate(LocalDateTime.now());
+
+                    return satelliteRepository.save(existing); // write to DB
+                });
+    }
+
 }
