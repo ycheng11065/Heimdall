@@ -1,6 +1,7 @@
 package com.application.server.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDate;
@@ -13,21 +14,53 @@ public class SatelliteEntity {
     // Marks primary key column
     @Id
     private UUID id;
+
+    @Column("norad_cat_id")
     private int noradCatId;
+
+    @Column("object_name")
     private String objectName;
+
+    @Column("object_type")
     private String objectType;
+
+    @Column("country_code")
     private String countryCode;
+
+    @Column("launch_date")
     private LocalDate launchDate;
+
+    @Column("decay_date")
     private LocalDate decayDate;
+
+    @Column("epoch")
     private LocalDateTime epoch;
+
+    @Column("last_update")
     private LocalDateTime lastUpdate;
+
+    @Column("tle_line1")
     private String tleLine1;
+
+    @Column("tle_line2")
     private String tleLine2;
+
+    @Column("inclination")
     private double inclination;
+
+    @Column("eccentricity")
     private double eccentricity;
+
+    @Column("period")
     private double period;
+
+    @Column("apoapsis")
     private double apoapsis;
+
+    @Column("periapsis")
     private double periapsis;
+
+    @Column("semimajor_axis")
     private double semimajorAxis;
 
     public UUID getId() {

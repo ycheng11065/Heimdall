@@ -59,19 +59,19 @@ public class SatelliteService {
 
     // Injecting WebClient.Builder dependency
     public SatelliteService(
-            WebClient.Builder webClientBuilder,
-            SpaceTrackAuthService authService,
-            SatelliteRepository satelliteRepository) {
+                WebClient.Builder webClientBuilder,
+                SpaceTrackAuthService authService,
+                SatelliteRepository satelliteRepository) {
 
-        // Set API base URL
-        this.webClientBuilder = webClientBuilder;
-        this.authService = authService;
-        this.satelliteRepository = satelliteRepository;
-    }
+            // Set API base URL
+            this.webClientBuilder = webClientBuilder;
+            this.authService = authService;
+            this.satelliteRepository = satelliteRepository;
+        }
 
-    @PostConstruct
-    private void init() {
-        this.webClient = webClientBuilder.baseUrl(baseUrl).build();
+        @PostConstruct
+        private void init() {
+            this.webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 
     public Flux<Satellite> getAllSatelliteData() {
@@ -184,7 +184,14 @@ public class SatelliteService {
                     existing.setLastUpdate(LocalDateTime.now());
 
                     return satelliteRepository.save(existing); // write to DB
-                });
+                })
+                .switchIfEmpty( // handle new satellite
+                        Mono.defer(() -> {
+                            System.out.println("New satellite " + updatedSatellite.getNoradCatId() + " discovered!");
+                            SatelliteEntity newEntity = SatelliteMapper.toEntity(updatedSatellite);
+                            newEntity.setLastUpdate(LocalDateTime.now());
+                            return satelliteRepository.save(newEntity);
+                        }));
     }
 
 }
