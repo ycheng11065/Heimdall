@@ -145,15 +145,18 @@ public class SatelliteService {
                 .doOnNext(e -> System.out.println("Saved: " + e.getObjectName()));
     }
 
-    public Flux<Satellite> updateAllSatellites() {
-        return querySatelliteGroup(allActiveSatellitesEndpoint);
+    public Flux<SatelliteEntity> updateSatelliteData() {
+        return getAllSatelliteData()
+                .flatMap(this::updateSatelliteDatabase)
+                .doOnNext(updated -> System.out.println("Updated: " + updated.getObjectName()))
+                .doOnError(err -> System.err.println("Update error: " + err.getMessage()))
+                .doOnComplete(() -> System.out.println("Satellite data update complete!"));
     }
 
-    /** ...
-     *
-     *
+    /**
+     * ...
      */
-    public Mono<SatelliteEntity> updateSatelliteData(Satellite updatedSatellite) {
+    public Mono<SatelliteEntity> updateSatelliteDatabase(Satellite updatedSatellite) {
         return satelliteRepository.findByNoradCatId(updatedSatellite.getNoradCatId())
                 .flatMap(existing -> {
                     boolean tleChanged = !existing.getTleLine1().equals(updatedSatellite.getTleLine1()) ||

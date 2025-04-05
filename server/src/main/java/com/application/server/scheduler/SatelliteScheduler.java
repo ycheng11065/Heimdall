@@ -12,15 +12,11 @@ public class SatelliteScheduler {
         this.satelliteService = satelliteService;
     }
 
+    // Update at every hour
     @Scheduled(cron = "0 0 * * * *")
     public void refreshSatelliteData() {
         System.out.println("The time has come... Updating satellite data!");
 
-        satelliteService.getAllSatelliteData()
-                .flatMap(satelliteService::updateSatelliteData)
-                .doOnNext(updated -> System.out.println("Updated: " + updated.getObjectName()))
-                .doOnError(err -> System.err.println("Update error: " + err.getMessage()))
-                .doOnComplete(() -> System.out.println("Satellite data update complete!"))
-                .subscribe();
+        satelliteService.updateSatelliteData().subscribe();
     }
 }

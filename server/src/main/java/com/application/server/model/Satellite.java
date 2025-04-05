@@ -51,16 +51,6 @@ public class Satellite {
     @JsonProperty("SEMIMAJOR_AXIS")
     private double semimajorAxis;
 
-//    private LocalDateTime lastUpdate;
-//
-//    public void setLastUpdate(LocalDateTime lastUpdate) {
-//        this.lastUpdate = lastUpdate;
-//    }
-
-//    public LocalDateTime getLastUpdate() {
-//        return lastUpdate;
-//    }
-
     public int getNoradCatId() {
         return noradCatId;
     }

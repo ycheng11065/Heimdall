@@ -67,7 +67,6 @@ public class SatelliteController {
 
     @GetMapping("/all/populate")
     public Flux<SatelliteEntity> populateAllSatellites() {
-
         return satelliteService.populateAllSatellites();
     }
 }
