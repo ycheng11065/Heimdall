@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS satellites (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    norad_cat_id INT,
+    norad_cat_id INT UNIQUE,
     object_name VARCHAR(100),
     object_type VARCHAR(50),
     country_code VARCHAR(10),
