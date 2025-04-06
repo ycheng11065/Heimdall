@@ -57,6 +57,9 @@ public class SatelliteService {
     @Value("${spacetrack.iridium}")
     private String iridiumSatellitesEndpoint;
 
+    @Value("${spacetrack.one}")
+    private String oneSatelliteEndpoint;
+
     // Injecting WebClient.Builder dependency
     public SatelliteService(
                 WebClient.Builder webClientBuilder,
@@ -94,6 +97,11 @@ public class SatelliteService {
     public Flux<Satellite> getAllIridiumData() {
         System.out.println("Fetching all Iridium data");
         return querySatelliteGroup(iridiumSatellitesEndpoint);
+    }
+
+    public Flux<Satellite> getOneData() {
+        System.out.println("Fetching one satellite");
+        return querySatelliteGroup(oneSatelliteEndpoint);
     }
 
     // Query all important historical satellites (for space nerds)
@@ -148,10 +156,18 @@ public class SatelliteService {
     public Flux<SatelliteEntity> updateSatelliteData() {
         return getAllSatelliteData()
                 .flatMap(this::updateSatelliteDatabase)
-                .doOnNext(updated -> System.out.println("Updated: " + updated.getObjectName()))
-                .doOnError(err -> System.err.println("Update error: " + err.getMessage()))
-                .doOnComplete(() -> System.out.println("Satellite data update complete!"));
+                .doOnNext(updated -> System.out.println("Processed: NORAD ID " + updated.getNoradCatId()))
+                .doOnError(err -> System.err.println("Process error: " + err.getMessage()))
+                .doOnComplete(() -> System.out.println("Satellite update protocol complete!"));
     }
+
+//    public Flux<SatelliteEntity> updateSatelliteData() {
+//        return getOneData()
+//                .concatMap(this::updateSatelliteDatabase)
+//                .doOnNext(updated -> System.out.println("Updated: " + updated.getObjectName()))
+//                .doOnError(err -> System.err.println("Update error: " + err.getMessage()))
+//                .doOnComplete(() -> System.out.println("Satellite data update complete!"));
+//    }
 
     /**
      * ...
@@ -163,7 +179,8 @@ public class SatelliteService {
                             !existing.getTleLine2().equals(updatedSatellite.getTleLine2());
 
                     if (!tleChanged) {
-                        return Mono.empty(); // nothing to update
+                        System.out.println("Satellite " + existing.getNoradCatId() + " does not require update!");
+                        return Mono.just(existing); // nothing to update
                     }
 
                     // Update changing info
@@ -174,7 +191,6 @@ public class SatelliteService {
                     existing.setObjectType(updatedSatellite.getObjectType());
                     existing.setCountryCode(updatedSatellite.getCountryCode());
                     existing.setDecayDate(updatedSatellite.getDecayDate());
-                    existing.setEpoch(updatedSatellite.getEpoch());
                     existing.setInclination(updatedSatellite.getInclination());
                     existing.setEccentricity(updatedSatellite.getEccentricity());
                     existing.setPeriod(updatedSatellite.getPeriod());

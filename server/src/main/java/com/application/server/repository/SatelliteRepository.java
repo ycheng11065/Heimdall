@@ -9,6 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface SatelliteRepository extends ReactiveCrudRepository<SatelliteEntity, UUID> {
-
     Mono<SatelliteEntity> findByNoradCatId(int noradCatId);
 }

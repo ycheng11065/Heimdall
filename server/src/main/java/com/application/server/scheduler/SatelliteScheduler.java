@@ -13,7 +13,8 @@ public class SatelliteScheduler {
     }
 
     // Update at every hour
-    @Scheduled(cron = "0 0 * * * *")
+//    @Scheduled(cron = "0 20 * * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void refreshSatelliteData() {
         System.out.println("The time has come... Updating satellite data!");
 
