@@ -13,55 +13,55 @@ import java.util.UUID;
 public class SatelliteEntity {
     // Marks primary key column
     @Id
-    private UUID id;
+    private UUID id;  // Internal unique identifier for the database (primary key)
 
     @Column("norad_cat_id")
-    private int noradCatId;
+    private int noradCatId; // Unique NORAD Catalog ID for the satellite
 
     @Column("object_name")
-    private String objectName;
+    private String objectName; // Satellite name or mission name (e.g., "ISS", "STARLINK-3000")
 
     @Column("object_type")
-    private String objectType;
+    private String objectType; // Type of object, e.g., "PAYLOAD", "ROCKET BODY", or "DEBRIS"
 
     @Column("country_code")
-    private String countryCode;
+    private String countryCode; // Country responsible for the object (ISO country code)
 
     @Column("launch_date")
-    private LocalDate launchDate;
+    private LocalDate launchDate; // Date the satellite was launched into orbit
 
     @Column("decay_date")
-    private LocalDate decayDate;
+    private LocalDate decayDate; // Date the satellite decayed or deorbited (null if still active)
 
     @Column("epoch")
-    private LocalDateTime epoch;
+    private LocalDateTime epoch; // Timestamp of the TLE data epoch (reference time for orbit)
 
     @Column("last_update")
-    private LocalDateTime lastUpdate;
+    private LocalDateTime lastUpdate; // Timestamp of the last update in the local database
 
     @Column("tle_line1")
-    private String tleLine1;
+    private String tleLine1; // First line of the satellite's TLE (Two-Line Element set)
 
     @Column("tle_line2")
-    private String tleLine2;
+    private String tleLine2; // Second line of the satellite's TLE (Two-Line Element set)
 
     @Column("inclination")
-    private double inclination;
+    private double inclination; // Orbit inclination in degrees (angle relative to Earth's equator)
 
     @Column("eccentricity")
-    private double eccentricity;
+    private double eccentricity; // Orbit eccentricity (0 = circular, closer to 1 = more elliptical)
 
     @Column("period")
-    private double period;
+    private double period; // Orbital period in minutes (how long it takes to complete one orbit)
 
     @Column("apoapsis")
-    private double apoapsis;
+    private double apoapsis; // Farthest point from Earth in the satellite’s orbit (in kilometers)
 
     @Column("periapsis")
-    private double periapsis;
+    private double periapsis; // Closest point to Earth in the satellite’s orbit (in kilometers)
 
     @Column("semimajor_axis")
-    private double semimajorAxis;
+    private double semimajorAxis; // Average distance from Earth (in kilometers); half the major axis of the orbit
 
     public UUID getId() {
         return id;
