@@ -70,11 +70,11 @@ public class SatelliteService {
             this.webClientBuilder = webClientBuilder;
             this.authService = authService;
             this.satelliteRepository = satelliteRepository;
-        }
+    }
 
-        @PostConstruct
-        private void init() {
-            this.webClient = webClientBuilder.baseUrl(baseUrl).build();
+    @PostConstruct
+    private void init() {
+        this.webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 
     public Flux<Satellite> getAllSatelliteData() {
@@ -140,7 +140,6 @@ public class SatelliteService {
 
     public Mono<SatelliteEntity> saveSatelliteToDb(Satellite satellite) {
         SatelliteEntity entity = SatelliteMapper.toEntity(satellite);
-        System.out.println("test");
         return satelliteRepository.save(entity);
     }
 
