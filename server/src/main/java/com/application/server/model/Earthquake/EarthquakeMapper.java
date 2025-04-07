@@ -36,7 +36,7 @@ public class EarthquakeMapper {
                 .toLocalDateTime();
 
         entity.setTime(localTime);
-        entity.setTime(localUpdated);
+        entity.setUpdated(localUpdated);
 
         return entity;
     }
