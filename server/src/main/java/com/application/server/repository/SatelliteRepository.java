@@ -1,6 +1,6 @@
 package com.application.server.repository;
 
-import com.application.server.model.SatelliteEntity;
+import com.application.server.model.Satellite.SatelliteEntity;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;

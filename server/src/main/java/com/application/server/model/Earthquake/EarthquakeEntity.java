@@ -1,4 +1,4 @@
-package com.application.server.model;
+package com.application.server.model.Earthquake;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -70,7 +70,91 @@ public class EarthquakeEntity {
     private String earthquakeId; // Preferred USGS event ID (from the `id` field in GeoJSON feed)
 
     @Column("last_updated")
-    private LocalDateTime lastUpdated; // Internal timestamp for the last successful sync from USGS
+    private LocalDateTime lastUpdate; // Internal timestamp for the last successful sync from USGS
+
+    public UUID getId() {
+        return id;
+    }
+
+    public Double getMag() {
+        return mag;
+    }
+
+    public String getPlace() {
+        return place;
+    }
+
+    public LocalDateTime getTime() {
+        return time;
+    }
+
+    public LocalDateTime getUpdated() {
+        return updated;
+    }
+
+    public int getTz() {
+        return tz;
+    }
+
+    public Double getCdi() {
+        return cdi;
+    }
+
+    public Double getMmi() {
+        return mmi;
+    }
+
+    public String getAlert() {
+        return alert;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public int getTsunami() {
+        return tsunami;
+    }
+
+    public int getSignificance() {
+        return significance;
+    }
+
+    public int getNst() {
+        return nst;
+    }
+
+    public Double getDmin() {
+        return dmin;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getDepth() {
+        return depth;
+    }
+
+    public String getAllKnownIds() {
+        return allKnownIds;
+    }
+
+    public String getEarthquakeId() {
+        return earthquakeId;
+    }
+
+    public LocalDateTime getLastUpdate() {
+        return lastUpdate;
+    }
 
     public void setMag(Double mag) {
         this.mag = mag;
@@ -148,7 +232,7 @@ public class EarthquakeEntity {
         this.earthquakeId = earthquakeId;
     }
 
-    public void setLastUpdated(LocalDateTime lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public void setLastUpdate(LocalDateTime lastUpdated) {
+        this.lastUpdate = lastUpdated;
     }
 }

@@ -1,8 +1,8 @@
 package com.application.server.service;
 
-import com.application.server.model.Satellite;
-import com.application.server.model.SatelliteEntity;
-import com.application.server.model.SatelliteMapper;
+import com.application.server.model.Satellite.Satellite;
+import com.application.server.model.Satellite.SatelliteEntity;
+import com.application.server.model.Satellite.SatelliteMapper;
 import com.application.server.repository.SatelliteRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,4 +1,4 @@
-package com.application.server.model;
+package com.application.server.model.Earthquake;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -25,7 +25,7 @@ public class EarthquakeMapper {
         entity.setDepth(earthquake.getGeometry().getDepth());
         entity.setAllKnownIds(earthquake.getProperties().getIds());
         entity.setEarthquakeId(earthquake.getEarthquakeId());
-        entity.setLastUpdated(LocalDateTime.now());
+        entity.setLastUpdate(LocalDateTime.now());
 
         LocalDateTime localTime = Instant.ofEpochMilli(earthquake.getProperties().getTime())
                 .atZone(ZoneId.systemDefault()) // Use computer/server’s zone

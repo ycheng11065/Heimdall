@@ -1,4 +1,4 @@
-package com.application.server.model;
+package com.application.server.model.Satellite;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;

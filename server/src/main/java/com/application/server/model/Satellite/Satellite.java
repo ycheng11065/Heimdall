@@ -1,4 +1,4 @@
-package com.application.server.model;
+package com.application.server.model.Satellite;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
