@@ -12,61 +12,61 @@ public class EarthquakeEntity {
     @Id
     private UUID id; // Internal unique identifier for the database (primary key)
 
-    @Column("mag")
+    @Column("magnitude")
     private Double mag; // Magnitude of the earthquake
 
-    @Column("place")
+    @Column("location_description")
     private String place; // Human-readable description of the location (e.g., "10km S of Townsville")
 
-    @Column("time")
+    @Column("event_time")
     private LocalDateTime time; // Date and time when the earthquake occurred (origin time)
 
-    @Column("updated")
+    @Column("usgs_update_time")
     private LocalDateTime updated; // Timestamp of the last update from USGS for this event
 
-    @Column("tz")
+    @Column("timezone_offset_minutes")
     private int tz; // Timezone offset from UTC in minutes (e.g., -480 for PST)
 
-    @Column("cdi")
+    @Column("community_intensity_cdi")
     private Double cdi; // Community Determined Intensity (based on user-submitted reports)
 
-    @Column("mmi")
+    @Column("mercalli_intensity_mmi")
     private Double mmi; // Modified Mercalli Intensity (instrumentally estimated shaking severity)
 
-    @Column("alert")
+    @Column("usgs_alert_level")
     private String alert; // Alert level issued by USGS: "green", "yellow", "orange", or "red"
 
-    @Column("status")
+    @Column("processing_status")
     private String status; // Processing status of the event: "automatic" or "reviewed"
 
-    @Column("tsunami")
+    @Column("tsunami_potential")
     private int tsunami; // Indicates tsunami potential: 1 = potential tsunami, 0 = none
 
-    @Column("significance")
+    @Column("event_significance")
     private int significance; // Event significance score (sig), higher = more impactful
 
-    @Column("nst")
+    @Column("station_count")
     private int nst; // Number of seismic stations used to locate the event
 
-    @Column("dmin")
+    @Column("min_station_distance_deg")
     private Double dmin; // Horizontal distance to the nearest station in degrees
 
-    @Column("type")
+    @Column("event_type")
     private String type; // Event type classification, e.g., "earthquake", "explosion", "quarry blast"
 
-    @Column("longitude")
+    @Column("epicenter_longitude")
     private Double longitude; // Epicenter longitude in decimal degrees
 
-    @Column("latitude")
+    @Column("epicenter_latitude")
     private Double latitude; // Epicenter latitude in decimal degrees
 
-    @Column("depth")
+    @Column("depth_km")
     private Double depth; // Depth of the earthquake in kilometers
 
-    @Column("all_known_ids")
+    @Column("known_event_ids")
     private String allKnownIds; // Comma-separated list of all known USGS IDs for this event (from `ids` field)
 
-    @Column("earthquake_id")
+    @Column("preferred_event_id")
     private String earthquakeId; // Preferred USGS event ID (from the `id` field in GeoJSON feed)
 
     @Column("last_updated")
