@@ -1,9 +1,6 @@
 package com.application.server.model;
 
-import reactor.core.publisher.Flux;
-
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 public class SatelliteMapper {
 
