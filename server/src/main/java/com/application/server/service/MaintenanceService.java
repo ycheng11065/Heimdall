@@ -17,8 +17,8 @@ public class MaintenanceService {
     }
 
     public Mono<Void> runVacuumAnalysis() {
-        return databaseClient.sql("VACUUM ANALYZE satellites")
-                .then()
+        return databaseClient.sql("VACUUM ANALYZE satellites").then()
+                .then(databaseClient.sql("VACUUM ANALYZE earthquakes").then())
                 .doOnError(err -> System.out.println("Error on vacuum of database!"))
                 .doOnSuccess(s -> {
                     lastCleanupTime = LocalDateTime.now();

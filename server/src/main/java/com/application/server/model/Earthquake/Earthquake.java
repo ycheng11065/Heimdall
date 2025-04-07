@@ -1,10 +1,12 @@
-package com.application.server.model;
+package com.application.server.model.Earthquake;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Earthquake {
 
     @JsonProperty("id")
@@ -16,6 +18,7 @@ public class Earthquake {
     @JsonProperty("geometry")
     private Geometry geometry;
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Properties {
         @JsonProperty("mag")
         private Double mag;
@@ -121,8 +124,16 @@ public class Earthquake {
         public String getIds() {
             return ids;
         }
+
+        public List<String> getKnowIds() {
+            return Arrays.stream(ids.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+        }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Geometry {
         @JsonProperty("coordinates")
         private List<Double> coordinates; // [longitude, latitude, depth]

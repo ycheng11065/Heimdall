@@ -1,4 +1,4 @@
-package com.application.server.model;
+package com.application.server.model.Satellite;
 
 import java.time.LocalDateTime;
 
