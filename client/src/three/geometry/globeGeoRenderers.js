@@ -1,17 +1,19 @@
-import { llToVector3, findOppositePoint, rotatePointsForProjection, stereographicProjection, triangulate2DPoints } from "./utils.js";
+import * as UTILS from "./utils.js";
 import { GEO_FEATURE, GLOBE } from "../constants.js";
 import * as THREE from "three";
+import { renderShapeIndices } from "./renderHelpers.js";
+import { geoContains } from "d3-geo";
 
 export const renderGeoLines = (data, scene, geoFeature) => {
     const features = data.features;
-
+    
     features.forEach(feature => {
         if (feature.geometry.type === "LineString") {
             const points = [];
 
             feature.geometry.coordinates.forEach(coord => {
                 const [longitude, latitude] = coord;
-                const point = llToVector3(latitude, longitude, GLOBE.RADIUS + 0.01); // .001 to be slightly above globe
+                const point = UTILS.llToVector3(latitude, longitude, GLOBE.RADIUS); // .001 to be slightly above globe
                 points.push(point);
             });
 
@@ -41,15 +43,16 @@ export const renderGeoLines = (data, scene, geoFeature) => {
 }
 
 // Improved rendering for continent-sized polygons using stereographic projection
-export const renderGeoPolygons = (data, scene, geoFeature) => {
+export const renderGeoPolygons = (data, scene, geoFeature, showIndices = true) => {
     const features = data.features;
+    const fibonacciSpherePoints = UTILS.generateFibonacciSpherePoints(4000, GLOBE.RADIUS);
 
     features.forEach(feature => {
         if (feature.geometry.type === "Polygon") {
             const coordinates = feature.geometry.coordinates[0];
 
             // Create a triangulated spherical polygon using the Red Blob Games approach
-            const shape = createSphericalPolygonWithStereographic(coordinates, GLOBE.RADIUS);
+            const shape = createSphericalPolygon(coordinates, fibonacciSpherePoints, feature);
 
             let color;
             switch (geoFeature) {
@@ -75,36 +78,81 @@ export const renderGeoPolygons = (data, scene, geoFeature) => {
 
             const mesh = new THREE.Mesh(shape, material);
             scene.add(mesh);
+
+            // Draw red dots at each coordinate point if showIndices is true
+            if (showIndices) {
+                renderShapeIndices(shape, scene);
+            }
         }
     });
 };
   
 // Create a properly triangulated spherical polygon using the Red Blob Games approach
-function createSphericalPolygonWithStereographic(coordinates, radius) {
-
-    const points3D = [];
+function createSphericalPolygon(coordinates, fibonacciSpherePoints, feature, /*subdivisions = 0*/) {
+    const vectors = [];
     coordinates.forEach(coord => {
         const [longitude, latitude] = coord;
-        const point = llToVector3(latitude, longitude, radius);
-        points3D.push(point.x, point.y, point.z);
+        const point = UTILS.llToVector3(longitude, latitude, GLOBE.RADIUS); // .01 to be slightly above globe
+        vectors.push(new THREE.Vector3(point.x, point.y, point.z));
     });
-    
-    const oppositePoint = findOppositePoint(points3D);
-    
-    const rotatedPoints = rotatePointsForProjection(points3D, oppositePoint);
-    
-    const projectedPoints = stereographicProjection(rotatedPoints);
 
-    const triangulationResult = triangulate2DPoints(projectedPoints);
+    let containedCount = 0;
+    for (let i = 0; i < fibonacciSpherePoints.length; i++) {
+        const point = fibonacciSpherePoints[i];
+        const v = new THREE.Vector3(point.x, point.y, point.z);
+        const ll = UTILS.vector3ToLL(v);
+        const contained = geoContains(feature, ll);
+        if (contained) {
+            containedCount++;
+            vectors.push(v);
+        }
+    }
+    console.log(`Points contained in polygon: ${containedCount}`);
+
+    // if (subdivisions > 0) {
+    //     const subdividedVectors = [];
+        
+    //     for (let i = 0; i < vectors.length; i++) {
+    //         const v1 = vectors[i];
+    //         const v2 = vectors[(i + 1) % vectors.length];
+
+    //         subdividedVectors.push(v1.clone());
+
+    //         // Add points along the great circle path
+    //         for (let j = 1; j <= subdivisions; j++) {
+    //             const t = j / (subdivisions + 1);
+
+    //             // Spherical linear interpolation (SLERP) to follow great circle
+    //             const interpolated = new THREE.Vector3().copy(v1).lerp(v2, t);
+    //             // Project back to sphere surface
+    //             interpolated.normalize().multiplyScalar(GLOBE.Z_CORRECTED_RADIUS);
+
+    //             subdividedVectors.push(interpolated);
+    //         }
+    //     }
+        
+    //     vectors.length = 0;
+    //     vectors.push(...subdividedVectors);
+    // }
+
     
+
+    const pointsArray = new Float32Array(vectors.length * 3);
+    vectors.forEach((v, i) => {
+        pointsArray[i * 3] = v.x;
+        pointsArray[i * 3 + 1] = v.y;
+        pointsArray[i * 3 + 2] = v.z;
+    });
+
+    const oppositePoint = UTILS.findOppositePoint(pointsArray);
+    const rotatedPoints = UTILS.rotatePointsForProjection(pointsArray, oppositePoint);
+    const stereographicPoints = UTILS.stereographicProjection(rotatedPoints);
+    const { indices } = UTILS.triangulate2DPoints(stereographicPoints);
+
     const geometry = new THREE.BufferGeometry();
-    
-    const originalPoints = new Float32Array(points3D);
-    geometry.setAttribute('position', new THREE.BufferAttribute(originalPoints, 3));
-    
-    geometry.setIndex(triangulationResult.indices);
-    
+    geometry.setIndex(indices);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointsArray, 3));
     geometry.computeVertexNormals();
-    
+
     return geometry;
 }

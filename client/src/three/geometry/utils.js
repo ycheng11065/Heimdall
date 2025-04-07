@@ -1,5 +1,6 @@
 import { Vector3, Quaternion, Matrix4 } from 'three';
 import Delaunator from 'delaunator';
+import { GLOBE } from '../constants.js';
 /**
  * Converts latitude and longitude coordinates to a 3D vector position on a sphere.
  * 
@@ -12,20 +13,63 @@ import Delaunator from 'delaunator';
  * // Convert coordinates to 3D position on a sphere with radius 10
  * const position = llToVector3(40.7128, -74.0060, 10);
  */
-export const llToVector3 = (lat, lon, radius) => {
-
-    // convert latitude and longitude to radians
+export const llToVector3 = (lon, lat, radius) => {
     const phi = (90 - lat) * (Math.PI / 180);
     const theta = (lon + 180) * (Math.PI / 180);
 
-
-    // calculate the x, y, z coordinates
     const x = -radius * Math.sin(phi) * Math.cos(theta);
     const y = radius * Math.cos(phi);
     const z = radius * Math.sin(phi) * Math.sin(theta);
 
 
     return new Vector3(x, y, z);
+}
+
+export const vector3ToLL = (vector, radius = GLOBE.RADIUS) => {
+    const x = vector.x;
+    const y = vector.y;
+    const z = vector.z;
+    
+    const lat = 90 - (Math.acos(y / radius) * (180 / Math.PI));
+    
+    let lon = (Math.atan2(z, -x) * (180 / Math.PI)) - 180;
+    
+    if (lon < -180) lon += 360;
+    if (lon > 180) lon -= 360;
+    
+    return [ lon, lat ];
+};
+
+export const generateFibonacciSpherePoints = (samples = 2000, radius = GLOBE.RADIUS) => {
+    const points = [];
+    const phi = Math.PI * (3 - Math.sqrt(5));
+
+    for (let i = 0; i < samples; i++) {
+        const y = 1 - (i / (samples - 1)) * 2;
+        const radiusAtY = Math.sqrt(1 - y * y);
+
+        const theta = phi * i;
+
+        const x = Math.cos(theta) * radiusAtY;
+        const z = Math.sin(theta) * radiusAtY;
+
+        points.push(new Vector3(x * radius, y * radius, z * radius));
+    }
+
+    return points;
+}
+
+export const getCentroid = (points) => {
+    let sumX = 0, sumY = 0, sumZ = 0;
+    const numPoints = points.length / 3;
+
+    for (let i = 0; i < numPoints; i++) {
+        sumX += points[i * 3];
+        sumY += points[i * 3 + 1];
+        sumZ += points[i * 3 + 2];
+    }
+
+    return [sumX / numPoints, sumY / numPoints, sumZ / numPoints];
 }
 
 export const findOppositePoint = (points) => {
@@ -119,3 +163,4 @@ export const triangulate2DPoints = (points2D) => {
     
     return { indices, delaunay };
 }
+

@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import GlobeCamera from './camera.js';
 import { renderGeoPolygons } from './geometry/globeGeoRenderers.js';
-import { GEO_FEATURE } from './constants.js';
+import { generateFibonacciSpherePoints } from './geometry/utils.js';
+import { GEO_FEATURE, GLOBE } from './constants.js';
 import Globe from './globes/globe.js';
+import { renderIndices } from './geometry/renderHelpers.js';
 
 export const main = async (canvas) => {
 
@@ -43,11 +45,13 @@ export const main = async (canvas) => {
     /**********************************************/
 
 
-    fetchGeoJSON('test').then(geojson => {
+    fetchGeoJSON('test2').then(geojson => {
         renderGeoPolygons(geojson, scene, GEO_FEATURE.LAND);
     }).catch(error => {
         console.error('Error processing GeoJSON:', error);
     });
+    // const fibonacciPoints = generateFibonacciSpherePoints();
+    // renderIndices(fibonacciPoints, scene);
 
 
 

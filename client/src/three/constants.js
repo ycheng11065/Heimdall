@@ -9,8 +9,8 @@ export const CAMERA = {
         DAMPING_FACTOR: 0.05,
         MIN_DISTANCE: 10.2,               // zoom min distance
         MAX_DISTANCE: 50,               // zoom max distance
-        MIN_POLAR_ANGLE: Math.PI * 0.1, // min angle of the camera
-        MAX_POLAR_ANGLE: Math.PI * 0.9  // max angle of the camera
+        MIN_POLAR_ANGLE: Math.PI * 0.01, // min angle of the camera
+        MAX_POLAR_ANGLE: Math.PI * 0.99  // max angle of the camera
     }
 };
 
@@ -25,5 +25,6 @@ export const GEO_FEATURE = {
 
 export const GLOBE = {
     RADIUS: 10,
+    Z_CORRECTED_RADIUS: 10.01, // .01 to be slightly above globe
     SEGMENTS: 64
 };
