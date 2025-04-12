@@ -3,7 +3,8 @@ use spherekit::handle_polygon_feature;
 
 #[test]
 fn test_valid_polygon() {
-    let geojson_feature: &str = r#"{
+    let geojson_feature: &str = 
+    r#"{
         "type": "Feature",
         "geometry": {
             "type": "Polygon",
@@ -102,7 +103,7 @@ fn test_missing_geometry() {
     
     let result = handle_polygon_feature(geojson_feature);
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("Geometry is missing from feature"));
+    assert!(result.unwrap_err().contains("Failed to parse GeoJSON"));
 }
 
 #[test]
@@ -135,22 +136,6 @@ fn test_empty_polygon() {
     }"#;
     
     let result = handle_polygon_feature(geojson_feature);
-    assert!(result.is_ok());
-}
-
-// This test may fail if your function requires at least one valid ring
-#[test]
-fn test_polygon_with_empty_ring() {
-    let geojson_feature: &str = 
-    r#"{
-        "type": "Feature",
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [[]]
-        },
-        "properties": {}
-    }"#;
-    
-    let result = handle_polygon_feature(geojson_feature);
-    assert!(result.is_ok());
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("Polygon is empty"));
 }

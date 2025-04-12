@@ -9,6 +9,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 geojson = "0.24.2"
 wasm-bindgen = "0.2.100"
+spherical_geometry = "0.3.0"
+ghx_constrained_delaunay = "0.2.0"
 
 [dev-dependencies]
 approx = "0.5.1"

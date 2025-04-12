@@ -1,7 +1,6 @@
 use std::f64::consts::PI;
 use geojson::{Feature, GeoJson, Geometry, PolygonType, Value};
 
-
 pub fn handle_polygon_feature(geojson_feature: &str) -> Result<(), String> {
 
     let geojson: GeoJson = geojson_feature.parse::<GeoJson>()
@@ -10,8 +9,7 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<(), String> {
     let feature: Feature = Feature::try_from(geojson)
         .map_err(|err| format!("Failed to convert to Feature: {}", err))?;
 
-    let geometry: Geometry = feature.geometry
-        .ok_or("Geometry is missing from feature".to_string())?;
+    let geometry: Geometry = feature.geometry.unwrap(); // parser would've catched if none
 
     let polygon: PolygonType = match geometry.value {
         Value::Polygon(polygon) => polygon,
@@ -20,17 +18,100 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<(), String> {
 
     if polygon.is_empty() { return Err("Polygon is empty".to_string()); }
 
-
-    for (i, ring) in polygon.iter().enumerate() {
-        for (j, pos) in ring.iter().enumerate() {
+    // for (i, ring) in polygon.iter().enumerate() {
+    //     for (j, pos) in ring.iter().enumerate() {
             
-        }
-    }
+
+
+
+    //     }
+    // }
     
     Ok(())
 }
 
 
+/// Projects a point from the UNIT SPHERE in 3D space onto a 2D plane using stereographic projection.
+///
+/// Stereographic projection maps points from a sphere to a plane, preserving angles but not areas.
+/// This implementation projects from the north pole (0, 0, 1) onto the plane z = 0.
+///
+/// # Arguments
+///
+/// * `point` - A 3D point (x, y, z) on or near the unit sphere
+///
+/// # Returns
+///
+/// * `Ok((f64, f64))` - A 2D point (x_2d, y_2d) representing the projected coordinates on the plane
+/// * `Err(String)` - An error message if the projection cannot be performed
+///
+/// # Examples
+///
+/// ```
+/// use spherekit::stereographic_projection;
+/// 
+/// let south_point = (0.5, 0.5, -0.7071);
+/// 
+/// match stereographic_projection(south_point) {
+///     Ok(projected) => println!("Projected coordinates: {:?}", projected),
+///     Err(e) => println!("Error: {}", e),
+/// }
+/// ```
+pub fn stereographic_projection(point: (f64, f64, f64)) -> Result<(f64, f64), String> {
+    let (x, y, z) = point;
+
+    // check if point is at or very close to the north pole
+    if (z - 1.0).abs() < f64::EPSILON {
+        return Err("Cannot project from the north pole (0, 0, 1)".to_string());
+    }
+
+    let x_2d: f64 = x / (1.0 - z);
+    let y_2d: f64 = y / (1.0 - z);
+
+    Ok((x_2d, y_2d))
+}
+
+/// Projects a point from a 2D plane back onto the unit sphere in 3D space using inverse stereographic projection.
+///
+/// This is the inverse operation of stereographic projection, mapping points from the plane z = 0
+/// back to the unit sphere. All projected points will be on the unit sphere.
+///
+/// # Arguments
+///
+/// * `point` - A 2D point (x, y) on the plane
+///
+/// # Returns
+///
+/// * `Ok((f64, f64, f64))` - A 3D point (x_3d, y_3d, z_3d) on the unit sphere
+/// * `Err(String)` - An error message if the inverse projection cannot be performed
+///
+/// # Examples
+///
+/// ```
+/// use spherekit::inverse_stereographic_projection;
+/// 
+/// let plane_point = (0.5, 0.5);
+/// 
+/// match inverse_stereographic_projection(plane_point) {
+///     Ok(sphere_point) => println!("Sphere coordinates: {:?}", sphere_point),
+///     Err(e) => println!("Error: {}", e),
+/// }
+/// ```
+pub fn inverse_stereographic_projection(point: (f64, f64)) -> Result<(f64, f64, f64), String> {
+    let (x, y) = point;
+
+    if x.is_nan() || y.is_nan() || x.is_infinite() || y.is_infinite() {
+        return Err("Input coordinates must be finite numbers".to_string());
+    }
+    
+    let denom: f64 = 1.0 + x.powi(2) + y.powi(2);
+    
+    let x_3d: f64 = 2.0 * x / denom;
+    let y_3d: f64 = 2.0 * y / denom;
+    let z_3d: f64 = (denom - 2.0) / denom;
+    
+    Ok((x_3d, y_3d, z_3d))
+}
 
 /// Generates evenly distributed points on a unit sphere using the Fibonacci spiral method.
 ///
@@ -52,9 +133,11 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<(), String> {
 /// use spherekit::fibonacci_sphere;
 /// 
 /// let points = fibonacci_sphere(100).unwrap();
-/// for (x, y, z) in points {
-///     println!("Point: ({}, {}, {})", x, y, z);
-/// }
+/// assert_eq!(points.len(), 100);
+/// 
+/// // Verify a point is on the unit sphere
+/// let (x, y, z) = points[0];
+/// assert!((x*x + y*y + z*z - 1.0).abs() < 1e-10);
 /// ```
 pub fn fibonacci_sphere(n: usize) -> Result<Vec<(f64, f64, f64)>, String> {
     if n == 0 {
