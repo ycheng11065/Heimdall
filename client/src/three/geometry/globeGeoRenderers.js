@@ -88,7 +88,7 @@ export const renderGeoPolygons = (data, scene, geoFeature, showIndices = true) =
 };
   
 // Create a properly triangulated spherical polygon using the Red Blob Games approach
-function createSphericalPolygon(coordinates, fibonacciSpherePoints, feature, /*subdivisions = 0*/) {
+function createSphericalPolygon(coordinates, fibonacciSpherePoints, feature) {
     const vectors = [];
     coordinates.forEach(coord => {
         const [longitude, latitude] = coord;
@@ -107,35 +107,7 @@ function createSphericalPolygon(coordinates, fibonacciSpherePoints, feature, /*s
             vectors.push(v);
         }
     }
-    console.log(`Points contained in polygon: ${containedCount}`);
-
-    // if (subdivisions > 0) {
-    //     const subdividedVectors = [];
-        
-    //     for (let i = 0; i < vectors.length; i++) {
-    //         const v1 = vectors[i];
-    //         const v2 = vectors[(i + 1) % vectors.length];
-
-    //         subdividedVectors.push(v1.clone());
-
-    //         // Add points along the great circle path
-    //         for (let j = 1; j <= subdivisions; j++) {
-    //             const t = j / (subdivisions + 1);
-
-    //             // Spherical linear interpolation (SLERP) to follow great circle
-    //             const interpolated = new THREE.Vector3().copy(v1).lerp(v2, t);
-    //             // Project back to sphere surface
-    //             interpolated.normalize().multiplyScalar(GLOBE.Z_CORRECTED_RADIUS);
-
-    //             subdividedVectors.push(interpolated);
-    //         }
-    //     }
-        
-    //     vectors.length = 0;
-    //     vectors.push(...subdividedVectors);
-    // }
-
-    
+    console.log(`Points contained in polygon: ${containedCount}`); 
 
     const pointsArray = new Float32Array(vectors.length * 3);
     vectors.forEach((v, i) => {
