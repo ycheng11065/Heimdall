@@ -73,7 +73,7 @@ fn test_invalid_json() {
                 ]
             ]
         "properties": {}
-    }"#;  // Missing closing brace
+    }"#;  // missing closing brace
     
     let result = handle_polygon_feature(geojson_feature);
     assert!(result.is_err());

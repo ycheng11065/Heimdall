@@ -1,5 +1,6 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, u32};
 use geojson::{Feature, GeoJson, Geometry, PolygonType, Value};
+use ghx_constrained_delaunay::types::Edge;
 
 pub fn handle_polygon_feature(geojson_feature: &str) -> Result<(), String> {
 
@@ -18,18 +19,66 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<(), String> {
 
     if polygon.is_empty() { return Err("Polygon is empty".to_string()); }
 
-    // for (i, ring) in polygon.iter().enumerate() {
-    //     for (j, pos) in ring.iter().enumerate() {
-            
+    let outer_ring: &Vec<Vec<f64>> = &polygon[0];
 
+    // get edges constraint of polygon
+    let outer_ring_edges: Vec<Edge> = get_ring_edges(outer_ring.len())
+        .map_err(|err| format!("Failed to generate outer ring edges: {}", err))?;
+    
 
+    // convert points from longitude and latitude to cartesian coordinates on the unit sphere
+    let mut cartesian_outer_ring: Vec<(f64, f64, f64)> = Vec::with_capacity(outer_ring.len());
 
-    //     }
-    // }
+    for point in outer_ring {
+        let cartesian_point: (f64, f64, f64) = ll_to_cartesian(point[0], point[1]);
+        cartesian_outer_ring.push(cartesian_point);
+    }
+    
+    // TODO: add fibonacci sphere points which are within the particular shape.
+
+    // generate stereographical projection of points
+    let mut stereographic_projection_outer_ring: Vec<(f64, f64)> = Vec::with_capacity(outer_ring.len());
+
+    for cartesian_point in cartesian_outer_ring {
+        let stereographic_projection: (f64, f64) = stereographic_projection(cartesian_point)
+            .map_err(|err| format!("Point: ({}, {}, {}) generated error {}", cartesian_point.0, cartesian_point.1, cartesian_point.2, err))?;
+
+        stereographic_projection_outer_ring.push(stereographic_projection);
+    }
+
+    // TODO: obtain triangulation
     
     Ok(())
 }
 
+// TODO: add error checking to make sure longitude and latitudes are in rads
+// TODO: add doc
+// TODO: add tests
+pub fn ll_to_cartesian(longitude: f64, latitude: f64) -> (f64, f64, f64) {
+    let x: f64 = latitude.cos() * longitude.cos();
+    let y: f64 = latitude.cos() * longitude.sin();
+    let z: f64 = longitude.sin();
+
+    (x, y, z)
+}   
+
+// TODO: add doc
+// TODO: add tests
+pub fn get_ring_edges(n: usize) -> Result<Vec<Edge>, String> {
+    if n > u32::MAX as usize { return Err("Too many vertices in the ring".to_string()); }
+    if n == 0 { return Err("The ring is empty".to_string()); }
+
+    let mut edges: Vec<Edge> = Vec::new();
+
+    for i in 0..n {
+        let from: u32 = i as u32;
+        let to: u32 = ((i + 1) % n) as u32; // wraps around to 0 for last vertex
+
+        edges.push(Edge { from, to });
+    }
+
+    Ok(edges)
+}
 
 /// Projects a point from the UNIT SPHERE in 3D space onto a 2D plane using stereographic projection.
 ///
