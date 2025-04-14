@@ -1,4 +1,4 @@
-use spherekit::stereographic_projection;
+use spherekit::{stereographic_projection, SphereKitError};
 use approx::assert_relative_eq;
 
 #[test]
@@ -56,7 +56,13 @@ fn test_southern_hemisphere() {
 fn test_north_pole_error() {
     let result = stereographic_projection((0.0, 0.0, 1.0));
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), "Cannot project from the north pole (0, 0, 1)".to_string());
+    
+    match result {
+        Err(SphereKitError::ProjectionError(msg)) => {
+            assert_eq!(msg, "Cannot project from the north pole (0, 0, 1)");
+        },
+        _ => panic!("Expected ProjectionError variant")
+    }
 }
 
 #[test]
@@ -64,14 +70,18 @@ fn test_near_north_pole() {
     // point very close to the north pole returns error
     let epsilon: f64 = f64::EPSILON / 2.0;
     let result = stereographic_projection((0.0, 0.0, 1.0 - epsilon));
-    
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("Cannot project from the north pole"));
+    
+    match result {
+        Err(SphereKitError::ProjectionError(msg)) => {
+            assert!(msg.contains("Cannot project from the north pole"));
+        },
+        _ => panic!("Expected ProjectionError variant")
+    }
     
     // near-pole point with non-zero x, y
     let near_pole: (f64, f64, f64) = (f64::EPSILON, f64::EPSILON, 1.0 - 2.0 * f64::EPSILON);
     let result: (f64, f64) = stereographic_projection(near_pole).unwrap();
-    
     assert!(result.0.is_finite());
     assert!(result.1.is_finite());
 }

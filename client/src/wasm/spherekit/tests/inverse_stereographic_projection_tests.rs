@@ -1,4 +1,4 @@
-use spherekit::inverse_stereographic_projection;
+use spherekit::{inverse_stereographic_projection, SphereKitError};
 use approx::assert_relative_eq;
 
 #[test]
@@ -101,20 +101,44 @@ fn test_invalid_inputs() {
     // NaN inputs
     let result = inverse_stereographic_projection((f64::NAN, 0.0));
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), "Input coordinates must be finite numbers".to_string());
+    
+    match result {
+        Err(SphereKitError::InverseProjectionError(msg)) => {
+            assert_eq!(msg, "Input coordinates must be finite numbers");
+        },
+        _ => panic!("Expected InverseProjectionError variant")
+    }
     
     let result = inverse_stereographic_projection((0.0, f64::NAN));
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), "Input coordinates must be finite numbers".to_string());
+    
+    match result {
+        Err(SphereKitError::InverseProjectionError(msg)) => {
+            assert_eq!(msg, "Input coordinates must be finite numbers");
+        },
+        _ => panic!("Expected InverseProjectionError variant")
+    }
     
     // infinite inputs
     let result = inverse_stereographic_projection((f64::INFINITY, 0.0));
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), "Input coordinates must be finite numbers".to_string());
+    
+    match result {
+        Err(SphereKitError::InverseProjectionError(msg)) => {
+            assert_eq!(msg, "Input coordinates must be finite numbers");
+        },
+        _ => panic!("Expected InverseProjectionError variant")
+    }
     
     let result = inverse_stereographic_projection((0.0, f64::NEG_INFINITY));
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), "Input coordinates must be finite numbers".to_string());
+    
+    match result {
+        Err(SphereKitError::InverseProjectionError(msg)) => {
+            assert_eq!(msg, "Input coordinates must be finite numbers");
+        },
+        _ => panic!("Expected InverseProjectionError variant")
+    }
 }
 
 #[test]
