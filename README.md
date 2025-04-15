@@ -1,6 +1,5 @@
 ## References & Acknowledgements
 
-### Sources
 
 #### Articles and References
 - [Delaunay/Voronoi on a Sphere](https://www.redblobgames.com/x/1842-delaunay-voronoi-sphere/) – Red Blob Games
@@ -10,6 +9,7 @@
 #### API Sources
 - [Space-Track API](https://www.space-track.org/) - Satellite data 
 - [OpenWeatherMap](https://openweathermap.org/api)
+
 
 ### Third-Party Licenses
 

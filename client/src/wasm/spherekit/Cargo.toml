@@ -1,0 +1,18 @@
+[package]
+name = "spherekit"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+geojson = "0.24.2"
+wasm-bindgen = "0.2.100"
+d3_geo_rs = "3.1.0"
+ghx_constrained_delaunay = "0.2.0"
+geo-types = "0.7.15"
+js-sys = "0.3.77"
+
+[dev-dependencies]
+approx = "0.5.1"
