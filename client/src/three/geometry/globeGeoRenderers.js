@@ -2,7 +2,7 @@ import * as UTILS from "./utils.js";
 import { GEO_FEATURE, GLOBE } from "../constants.js";
 import * as THREE from "three";
 import { renderShapeIndices } from "./renderHelpers.js";
-import { geoContains } from "d3-geo";
+import { handle_polygon_feature_wasm } from "../../wasm/spherekit/pkg/spherekit.js";
 
 export const renderGeoLines = (data, scene, geoFeature) => {
     const features = data.features;
@@ -45,15 +45,14 @@ export const renderGeoLines = (data, scene, geoFeature) => {
 // Improved rendering for continent-sized polygons using stereographic projection
 export const renderGeoPolygons = (data, scene, geoFeature, showIndices = true) => {
     const features = data.features;
-    const fibonacciSpherePoints = UTILS.generateFibonacciSpherePoints(4000, GLOBE.RADIUS);
 
     features.forEach(feature => {
         if (feature.geometry.type === "Polygon") {
-            const coordinates = feature.geometry.coordinates[0];
+            let coordinates = handle_polygon_feature_wasm(JSON.stringify(feature));
 
             // Create a triangulated spherical polygon using the Red Blob Games approach
-            const shape = createSphericalPolygon(coordinates, fibonacciSpherePoints, feature);
-
+            const shape = createSphericalPolygon(coordinates);
+            
             let color;
             switch (geoFeature) {
                 case GEO_FEATURE.OCEANS:
@@ -88,43 +87,22 @@ export const renderGeoPolygons = (data, scene, geoFeature, showIndices = true) =
 };
   
 // Create a properly triangulated spherical polygon using the Red Blob Games approach
-function createSphericalPolygon(coordinates, fibonacciSpherePoints, feature) {
-    const vectors = [];
-    coordinates.forEach(coord => {
-        const [longitude, latitude] = coord;
-        const point = UTILS.llToVector3(longitude, latitude, GLOBE.RADIUS); // .01 to be slightly above globe
-        vectors.push(new THREE.Vector3(point.x, point.y, point.z));
-    });
+function createSphericalPolygon(coordinates) {
+    
 
-    let containedCount = 0;
-    for (let i = 0; i < fibonacciSpherePoints.length; i++) {
-        const point = fibonacciSpherePoints[i];
-        const v = new THREE.Vector3(point.x, point.y, point.z);
-        const ll = UTILS.vector3ToLL(v);
-        const contained = geoContains(feature, ll);
-        if (contained) {
-            containedCount++;
-            vectors.push(v);
-        }
+    const scaledPositions = new Float32Array(coordinates.length * 3);
+
+
+    for (let i = 0; i < coordinates.length; i++) {
+        const vector = coordinates[i];
+        scaledPositions[i * 3] = vector[0] * GLOBE.RADIUS;
+        scaledPositions[i * 3 + 1] = vector[2] * GLOBE.RADIUS;
+        scaledPositions[i * 3 + 2] = -vector[1] * GLOBE.RADIUS;
     }
-    console.log(`Points contained in polygon: ${containedCount}`); 
-
-    const pointsArray = new Float32Array(vectors.length * 3);
-    vectors.forEach((v, i) => {
-        pointsArray[i * 3] = v.x;
-        pointsArray[i * 3 + 1] = v.y;
-        pointsArray[i * 3 + 2] = v.z;
-    });
-
-    const oppositePoint = UTILS.findOppositePoint(pointsArray);
-    const rotatedPoints = UTILS.rotatePointsForProjection(pointsArray, oppositePoint);
-    const stereographicPoints = UTILS.stereographicProjection(rotatedPoints);
-    const { indices } = UTILS.triangulate2DPoints(stereographicPoints);
+    
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setIndex(indices);
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(pointsArray, 3));
-    geometry.computeVertexNormals();
+    geometry.setAttribute('position', new THREE.BufferAttribute(scaledPositions, 3));
 
     return geometry;
 }

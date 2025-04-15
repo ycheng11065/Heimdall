@@ -3,8 +3,10 @@ import GlobeCamera from './camera.js';
 import { renderGeoPolygons } from './geometry/globeGeoRenderers.js';
 import { GEO_FEATURE, GLOBE } from './constants.js';
 import Globe from './globes/globe.js';
+import initWasm from '../wasm/spherekit/pkg/spherekit.js';
 
 export const main = async (canvas) => {
+    await initWasm(); // init wasm module
 
     /**********************************************/
     /* Canvas, window, camera, and renderer setup */

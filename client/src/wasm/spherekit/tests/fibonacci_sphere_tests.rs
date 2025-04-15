@@ -11,8 +11,8 @@ fn test_fibonacci_sphere_single_point() {
     let (longitude, latitude) = points[0];
     
     // for a single point, we expect it to be at the "north pole"
-    assert!(longitude >= -180.0 && longitude <= 180.0);
-    assert_relative_eq!(latitude, 90.0, epsilon = 1e-10);
+    assert!(longitude >= -PI && longitude <= PI);
+    assert_relative_eq!(latitude, PI/2.0, epsilon = 1e-10);
 }
 
 #[test]
@@ -23,10 +23,10 @@ fn test_fibonacci_sphere_multiple_points() {
     let points: Vec<(f64, f64)> = result.unwrap();
     assert_eq!(points.len(), n);
     for (longitude, latitude) in points {
-        // check longitude is normalized to [-180, 180]
-        assert!(longitude >= -180.0 && longitude <= 180.0);
-        // check latitude is within valid range [-90, 90]
-        assert!(latitude >= -90.0 && latitude <= 90.0);
+        // check longitude is normalized to [-π, π]
+        assert!(longitude >= -PI && longitude <= PI);
+        // check latitude is within valid range [-π/2, π/2]
+        assert!(latitude >= -PI/2.0 && latitude <= PI/2.0);
     }
 }
 
@@ -42,12 +42,9 @@ fn test_fibonacci_sphere_distribution() {
     let mut sum_z: f64 = 0.0;
     
     for (longitude, latitude) in &points {
-        let longitude_rad: f64 = longitude * PI / 180.0;
-        let latitude_rad: f64 = latitude * PI / 180.0;
-        
-        let x: f64 = latitude_rad.cos() * longitude_rad.cos();
-        let y: f64 = latitude_rad.cos() * longitude_rad.sin();
-        let z: f64 = latitude_rad.sin();
+        let x: f64 = latitude.cos() * longitude.cos();
+        let y: f64 = latitude.cos() * longitude.sin();
+        let z: f64 = latitude.sin();
         
         sum_x += x;
         sum_y += y;
@@ -116,16 +113,11 @@ fn test_increasing_density() {
                 let (lon1, lat1) = points[i];
                 let (lon2, lat2) = points[j];
                 
-                let lon1_rad: f64 = lon1 * PI / 180.0;
-                let lat1_rad: f64 = lat1 * PI / 180.0;
-                let lon2_rad: f64 = lon2 * PI / 180.0;
-                let lat2_rad: f64 = lat2 * PI / 180.0;
-                
-                let delta_lon: f64 = (lon1_rad - lon2_rad).abs();
+                let delta_lon: f64 = (lon1 - lon2).abs();
                 let delta_lon: f64 = delta_lon.min(2.0 * PI - delta_lon);
                 
-                let central_angle: f64 = (lat1_rad.sin() * lat2_rad.sin() + 
-                                    lat1_rad.cos() * lat2_rad.cos() * delta_lon.cos()).acos();
+                let central_angle: f64 = (lat1.sin() * lat2.sin() + 
+                                    lat1.cos() * lat2.cos() * delta_lon.cos()).acos();
                 
                 min_dist = min_dist.min(central_angle);
             }

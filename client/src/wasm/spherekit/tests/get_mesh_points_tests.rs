@@ -2,7 +2,6 @@ use d3_geo_rs::polygon_contains::polygon_contains;
 use geo_types::{coord, Coord, LineString};
 use spherekit::{get_mesh_points, DEFAULT_FIBONACCI_POINT_COUNT, SphereKitError};
 use approx::assert_relative_eq;
-use std::f64::consts::PI;
 
 #[test]
 fn test_get_mesh_points_triangle() {
@@ -34,11 +33,21 @@ fn test_get_mesh_points_rectangle() {
     
     let result = get_mesh_points(&rectangle);
     assert!(result.is_ok());
-    
     let mesh_points: Vec<(f64, f64, f64)> = result.unwrap();
-    // a larger shape should have more interior points
-    assert!(mesh_points.len() > DEFAULT_FIBONACCI_POINT_COUNT / 10, 
-            "A decent-sized shape should capture many points");
+    
+    // a 20°×20° rectangle covers approximately 1% of a sphere's surface
+    // so we should expect around 1% of the Fibonacci points to be in it
+    let expected_min_points: usize = (DEFAULT_FIBONACCI_POINT_COUNT as f64 * 0.005).ceil() as usize + 4;
+    
+    assert!(
+        mesh_points.len() >= expected_min_points,
+        "Expected at least {} points for this rectangle, got {}",
+        expected_min_points, mesh_points.len()
+    );
+    
+    // ensure the original vertices are included
+    assert!(mesh_points.len() >= rectangle.len(), 
+        "Should include at least the original vertices");
 }
 
 #[test]
@@ -148,49 +157,49 @@ fn test_get_mesh_points_3d_coordinates_on_unit_sphere() {
 #[test]
 fn test_mesh_points_contained_in_polygon() {
     let polygon: Vec<(f64, f64)> = vec![
-        (0.0, 0.0),      // southwest corner
-        (0.0, 30.0),     // northwest corner
-        (30.0, 0.0),     // southeast corner
+        (0.0, 0.0),     // southwest corner
+        (0.0, 30.0),    // northwest corner
+        (30.0, 0.0),    // southeast corner
     ];
     
     let result = get_mesh_points(&polygon);
     assert!(result.is_ok(), "Expected successful mesh generation");
     
-    let mesh_points_3d = result.unwrap();
+    let mesh_points_3d: Vec<(f64, f64, f64)> = result.unwrap();
     assert!(!mesh_points_3d.is_empty(), "Expected non-empty mesh points");
-    
     assert!(mesh_points_3d.len() >= polygon.len(), "Expected at least the polygon vertices in the result");
     
-    // convert 3D points back to 2D for checking containment
-    let mesh_points_2d: Vec<(f64, f64)> = mesh_points_3d
-        .iter()
-        .map(|(x, y, z)| {
-            let longitude: f64 = y.atan2(*x) * 180.0 / PI;
-            let latitude: f64 = z.asin() * 180.0 / PI;
-            (longitude, latitude)
-        })
-        .collect();
-    
-    // create LineString for containment checks
+    // radians here because that's what polygon_contains expects
     let polygon_coords: Vec<Coord<f64>> = polygon
         .iter()
-        .map(|point| coord! { x: point.0, y: point.1 })
+        .map(|point| coord! { x: point.0.to_radians(), y: point.1.to_radians() })
         .collect();
     let polygon_linestring: [LineString<f64>; 1] = [LineString(polygon_coords)];
     
-    // check that all points are contained in the polygon
-    for (i, point) in mesh_points_2d.iter().enumerate() {
-        let coord: Coord = coord! { x: point.0, y: point.1 };
+    // convert 3D cartesian points back to longitude/latitude (in radians for checking)
+    for (i, point_3d) in mesh_points_3d.iter().enumerate() {
+        let (x, y, z) = *point_3d;
+        
+        let lon: f64 = y.atan2(x); // in rads
+        let lat: f64 = z.asin();   // in rads
+        
+        let coord: Coord = coord! { x: lon, y: lat };
         
         // special case for the polygon vertices
-        let is_vertex: bool = polygon.iter().any(|v| 
-            (v.0 - point.0).abs() < 1e-10 && (v.1 - point.1).abs() < 1e-10
-        );
+        let is_vertex: bool = polygon.iter().any(|v| {
+            let v_lon: f64 = v.0.to_radians();
+            let v_lat: f64 = v.1.to_radians();
+            (v_lon - lon).abs() < 1e-10 && (v_lat - lat).abs() < 1e-10
+        });
         
         if !is_vertex {
+            // check that the point is contained in the polygon
             assert!(
                 polygon_contains(&polygon_linestring, &coord),
-                "Point at index {} ({}, {}) is outside the polygon", i, point.0, point.1
+                "Point at index {} ({}, {}) (cartesian: {}, {}, {}) is outside the polygon", 
+                i, 
+                lon.to_degrees(), lat.to_degrees(),
+                x, y, z
             );
         }
     }

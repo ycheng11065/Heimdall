@@ -4,8 +4,8 @@ use geojson::{Feature, GeoJson, Geometry, PolygonType, Value};
 use crate::{fibonacci_sphere, ll_to_cartesian, SphereKitError};
 
 /// The default number of points to generate in a Fibonacci sphere distribution
-pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 2000;
-
+pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 3000; // TODO: right now point generation is done for every feature
+                                                        // optimize by generating once for all features
 
 pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f64)>, String> {
 
@@ -15,7 +15,7 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f6
     let feature: Feature = Feature::try_from(geojson)
         .map_err(|err| format!("Failed to convert to Feature: {}", err))?;
 
-    let geometry: Geometry = feature.geometry.unwrap(); // parser would've catched if none
+    let geometry: Geometry = feature.geometry.unwrap(); // parser would've caught if none
 
     let polygon: PolygonType = match geometry.value {
         Value::Polygon(polygon) => polygon,
@@ -29,13 +29,8 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f6
         .map(|point| (point[0], point[1]))
         .collect();
 
-    // let outer_ring_edges: Vec<Edge> = get_ring_edges(outer_ring.len())
-    //     .map_err(|err| format!("Failed to generate outer ring edges: {}", err))?;
-
     let mesh_points: Vec<(f64, f64, f64)> = get_mesh_points(&outer_ring)
         .map_err(|err| format!("Failed to generate mesh points: {}", err))?;
-
-    // TODO: obtain triangulation
     
     Ok(mesh_points)
 }
@@ -90,28 +85,28 @@ pub fn get_mesh_points(outer_ring: &Vec<(f64, f64)>) -> Result<Vec<(f64, f64, f6
         return Err(SphereKitError::MeshGenerationError("Outer ring must have at least 3 points to form a valid polygon".to_string()));
     }
 
-
     let outer_ring_coord: Vec<Coord<f64>> = outer_ring
         .iter()
-        .map(|point| coord! { x: point.0, y: point.1 })
+        .map(|point| coord! { x: point.0.to_radians(), y: point.1.to_radians() })
         .collect();
-
+    
     let outer_ring_linestring: [LineString<f64>; 1] = [LineString(outer_ring_coord)];
 
     // get fibonacci points
     let fibonacci_points: Vec<(f64, f64)> = fibonacci_sphere(DEFAULT_FIBONACCI_POINT_COUNT)?;
 
     let mut mesh_points_2d: Vec<(f64, f64)> = outer_ring.clone();
+
     for point in fibonacci_points {
         let coord: Coord<f64> = coord! { x: point.0, y: point.1 };
 
         // keep fibonacci points which are contained in the shape
         if polygon_contains(&outer_ring_linestring, &coord) {
-            mesh_points_2d.push(coord.x_y());
+            mesh_points_2d.push((coord.x.to_degrees(), coord.y.to_degrees()));
         }
     }
 
-    let mut mesh_points_3d: Vec<(f64, f64, f64)> = Vec::with_capacity(mesh_points_2d.len());
+    let mut mesh_points_3d: Vec<(f64, f64, f64)> = Vec::new();//(mesh_points_2d.len());
     for point in mesh_points_2d {
         let point_3d: (f64, f64, f64) = ll_to_cartesian(point.0, point.1)?;
         mesh_points_3d.push(point_3d);
