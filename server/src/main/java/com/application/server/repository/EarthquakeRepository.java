@@ -13,4 +13,7 @@ public interface EarthquakeRepository extends ReactiveCrudRepository<EarthquakeE
 
     @Query("SELECT * FROM earthquakes WHERE preferred_event_id = :earthquakeID")
     Mono<EarthquakeEntity> findByEarthquakeId(@Param("earthquakeID") String earthquakeID);
+
+    @Query("DELETE FROM earthquake WHERE event_time < NOW() - INTERVAL '30 days'")
+    Mono<Void> deleteEarthquakesOlderThan30Days();
 }

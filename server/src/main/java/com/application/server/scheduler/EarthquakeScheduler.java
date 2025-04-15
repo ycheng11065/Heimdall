@@ -1,7 +1,6 @@
 package com.application.server.scheduler;
 
 import com.application.server.service.EarthquakeService;
-import com.application.server.service.SatelliteService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -13,11 +12,19 @@ public class EarthquakeScheduler {
         this.earthquakeService = earthquakeService;
     }
 
-    // Update every hour and 20 minutes
-    @Scheduled(cron = "0 */15 * * * *")
-    public void refreshEarthquakeData() {
+    // Update earthquake data every 5 minutes
+    @Scheduled(cron = "0 */5 * * * *")
+    public void syncEarthquakeData() {
         System.out.println("The time has come... Updating earthquake data!");
 
-        earthquakeService.RefreshDatabase().subscribe();
+        earthquakeService.syncEarthquakeData().subscribe();
+    }
+
+    // Schedule earthquake cleanup at midnight every day
+    @Scheduled(cron = "0 0 0 * * *")
+    public void cleanupEarthquakeData() {
+        System.out.println("The time has come... Deleting old earthquake data!");
+
+        earthquakeService.cleanupEarthquakeData().subscribe();
     }
 }

@@ -4,15 +4,9 @@ import com.application.server.model.Earthquake.Earthquake;
 import com.application.server.model.Earthquake.EarthquakeEntity;
 import com.application.server.model.Earthquake.EarthquakeFeatureCollection;
 import com.application.server.model.Earthquake.EarthquakeMapper;
-import com.application.server.model.Satellite.Satellite;
-import com.application.server.model.Satellite.SatelliteEntity;
-import com.application.server.model.Satellite.SatelliteMapper;
 import com.application.server.repository.EarthquakeRepository;
 import jakarta.annotation.PostConstruct;
-import org.apache.catalina.startup.Tomcat;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.relational.core.sql.Update;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -45,8 +39,7 @@ public class EarthquakeService {
         webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 
-    public Flux<Earthquake> queryEarthquakeData(String endpoint) {
-//        return webClient.get().uri(endpoint).retrieve().bodyToFlux(Earthquake.class);
+    public Flux<Earthquake> fetchEarthquakeFeatures(String endpoint) {
         return webClient.get()
                 .uri(endpoint)
                 .retrieve()
@@ -54,8 +47,8 @@ public class EarthquakeService {
                 .flatMapMany(collection -> Flux.fromIterable(collection.getFeatures()));
     }
 
-    public Flux<Earthquake> getPastMonthData() {
-        System.out.println("Fetching all earthquake data from the past 30 days");
+    public Flux<Earthquake> fetchRecentEarthquakes() {
+        System.out.println("Fetching all earthquake data from the past 24 hours UTC");
 
         LocalDateTime start = LocalDateTime.now().minusDays(1);
         LocalDateTime end = LocalDateTime.now();
@@ -64,13 +57,13 @@ public class EarthquakeService {
         String formattedStart = start.format(formatter);
         String formattedEnd = end.format(formatter);
 
-        String endpoint = "/query?format=geojson&starttime=" + formattedStart + "&endtime=" + formattedEnd + "&minmagnitude=2.5";
+        String endpoint = "/query?format=geojson&starttime=now-1day&minmagnitude=2.5";
         System.out.println(endpoint);
-        return queryEarthquakeData(endpoint);
+        return fetchEarthquakeFeatures(endpoint);
     }
 
-    public Flux<EarthquakeEntity> RefreshDatabase() {
-        return getPastMonthData()
+    public Flux<EarthquakeEntity> syncEarthquakeData() {
+        return fetchRecentEarthquakes()
                 .flatMap(this::UpdateEarthquakeDatabase)
                 .doOnNext(updated -> System.out.println("Processed: earthquake ID " + updated.getEarthquakeId()))
                 .doOnError(err -> System.err.println("Process error: " + err.getMessage()))
@@ -143,5 +136,12 @@ public class EarthquakeService {
                                             })
                                     );
                         }));
+    }
+
+    public Mono<Void> cleanupEarthquakeData() {
+        return earthquakeRepository
+                .deleteEarthquakesOlderThan30Days()
+                .doOnSuccess(unused -> System.out.println("Old earthquake data successfully removed!"))
+                .doOnError(err -> System.err.println("Failed to clean up old earthquake data: " + err.getMessage()));
     }
 }
