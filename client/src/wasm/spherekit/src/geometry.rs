@@ -2,6 +2,34 @@ use std::f64::consts::PI;
 use std::f64::EPSILON;
 use crate::SphereKitError;
 use nalgebra::{Rotation, Rotation3, Unit, Vector3};
+use ghx_constrained_delaunay::types::Vertex2d;
+
+/// A 2D point representation used for constrained Delaunay triangulation.
+///
+/// This struct provides a simple wrapper for 2D coordinates and implements the
+/// `Vertex2d` trait required by the constrained Delaunay triangulation algorithm.
+///
+/// # Fields
+///
+/// * `x` - The x-coordinate of the point in 2D space
+/// * `y` - The y-coordinate of the point in 2D space
+///
+#[derive(Copy, Clone)]
+pub struct Point2D {
+    pub x: f64,
+    pub y: f64,
+}
+
+// Implement Vertex2d for Point2D
+impl Vertex2d for Point2D {
+    fn x(self) -> f64 {
+        self.x
+    }
+    
+    fn y(self) -> f64 {
+        self.y
+    }
+}
 
 /// Converts geographic coordinates (longitude and latitude) from decimal degrees to 3D Cartesian coordinates
 /// on a unit sphere.

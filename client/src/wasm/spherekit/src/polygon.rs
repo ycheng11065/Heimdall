@@ -1,12 +1,29 @@
 use d3_geo_rs::polygon_contains::polygon_contains;
 use geo_types::{coord, Coord, LineString};
 use geojson::{Feature, GeoJson, Geometry, PolygonType, Value};
-use ghx_constrained_delaunay::types::Edge;
-use crate::{fibonacci_sphere, ll_to_cartesian, rotate_points_to_south_pole, SphereKitError};
+use ghx_constrained_delaunay::{
+    constrained_triangulation_from_2d_vertices, 
+    types::Edge, Triangulation,
+    constrained_triangulation::ConstrainedTriangulationConfiguration,
+};
+use crate::{
+    fibonacci_sphere, geometry::Point2D, ll_to_cartesian, rotate_points_to_south_pole, stereographic_projection, SphereKitError
+};
+
+/*********************************/
+/*           Constants           */
+/*********************************/
+
 
 /// The default number of points to generate in a Fibonacci sphere distribution
-pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 3000; // TODO: right now point generation is done for every feature
-                                                        // optimize by generating once for all features
+pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 3000;
+
+
+
+/*********************************/
+/*           Functions           */
+/*********************************/
+
 
 pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f64)>, String> {
 
@@ -44,17 +61,31 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f6
         edges.push(edge);
     }
 
+    // rotate points to south pole for better stereographic projection
     let rotated_points: Vec<(f64, f64, f64)> = rotate_points_to_south_pole(&mesh_points)
         .map_err(|err| format!("Failed to rotate points to south pole: {}", err))?;
 
-
-    // stereographic projection
-    // constrained delauney triangulation
-    // inverse stereographic projection
-    // rotate back to original pos
-    // return points and triangles
+    // do a stereographic projection
+    let mut projected_points: Vec<Point2D> = Vec::with_capacity(rotated_points.len());
+    for point in rotated_points {
+        let projected_point: (f64, f64) = stereographic_projection(point)
+            .map_err(|err| format!("Failed to project points: {}", err))?;
+        let projected_point: Point2D = Point2D { x: projected_point.0, y: projected_point.1 };
+        projected_points.push(projected_point);
+    }
     
-    Ok(rotated_points)
+
+    let config: ConstrainedTriangulationConfiguration = ConstrainedTriangulationConfiguration {
+        bin_vertex_density_power: 1.0,
+    };
+
+    let triangles: Triangulation = constrained_triangulation_from_2d_vertices(&projected_points, &edges, config)
+        .map_err(|err| format!("Failed to generate triangulation: {}", err))?;
+
+    // constrained delauney triangulation on projected points
+    // return original points (and fibonacci ones) and triangles
+    
+    Ok(mesh_points)
 }
 
 /// Generates a set of 3D mesh points from a geographic polygon by combining the polygon's
