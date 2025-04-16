@@ -1,7 +1,8 @@
 use d3_geo_rs::polygon_contains::polygon_contains;
 use geo_types::{coord, Coord, LineString};
 use geojson::{Feature, GeoJson, Geometry, PolygonType, Value};
-use crate::{fibonacci_sphere, ll_to_cartesian, SphereKitError};
+use ghx_constrained_delaunay::types::Edge;
+use crate::{fibonacci_sphere, ll_to_cartesian, rotate_points_to_south_pole, SphereKitError};
 
 /// The default number of points to generate in a Fibonacci sphere distribution
 pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 3000; // TODO: right now point generation is done for every feature
@@ -31,8 +32,29 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f6
 
     let mesh_points: Vec<(f64, f64, f64)> = get_mesh_points(&outer_ring)
         .map_err(|err| format!("Failed to generate mesh points: {}", err))?;
+
+    // calculate edges for outer ring
+    let mut edges: Vec<Edge> = Vec::with_capacity(outer_ring.len());
+    for i in 0..outer_ring.len() {
+        let edge: Edge = Edge { 
+            from: i as u32, 
+            to: ((i + 1) % outer_ring.len()) as u32 
+        };
+
+        edges.push(edge);
+    }
+
+    let rotated_points: Vec<(f64, f64, f64)> = rotate_points_to_south_pole(&mesh_points)
+        .map_err(|err| format!("Failed to rotate points to south pole: {}", err))?;
+
+
+    // stereographic projection
+    // constrained delauney triangulation
+    // inverse stereographic projection
+    // rotate back to original pos
+    // return points and triangles
     
-    Ok(mesh_points)
+    Ok(rotated_points)
 }
 
 /// Generates a set of 3D mesh points from a geographic polygon by combining the polygon's
@@ -78,7 +100,7 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f6
 /// points, then filters to keep only those inside the polygon boundary.
 pub fn get_mesh_points(outer_ring: &Vec<(f64, f64)>) -> Result<Vec<(f64, f64, f64)>, SphereKitError> {
     if outer_ring.is_empty() {
-        return Err(SphereKitError::MeshGenerationError("Outer ring cannot be empty".to_string()));
+        return Err(SphereKitError::EmptyPointSetError("Outer ring cannot be empty".to_string()));
     }
 
     if outer_ring.len() < 3 {

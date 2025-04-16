@@ -52,12 +52,29 @@ pub enum SphereKitError {
     /// Error when generating mesh points
     ///
     /// This can occur with invalid parameters such as an outer ring
-    /// with not enough points or no points at all.
+    /// with not enough points.
     ///
     /// # Fields
     ///
     /// * `0` - Detailed error message
     MeshGenerationError(String),
+
+    /// Error when point rotation cannot be determined.
+    ///
+    /// This typically occurs when the centroid of points is a zero vector
+    /// or when the rotation axis cannot be determined.
+    ///
+    /// # Fields
+    ///
+    /// * `0` - Detailed error message
+    RotationError(String),
+
+    /// Error when attempting to use an empty set of points.
+    ///
+    /// # Fields
+    ///
+    /// * `0` - Detailed error message
+    EmptyPointSetError(String),
 }
 
 impl fmt::Display for SphereKitError {
@@ -82,6 +99,12 @@ impl fmt::Display for SphereKitError {
             }
             SphereKitError::MeshGenerationError(msg) => {
                 write!(f, "Mesh generation error: {}", msg)
+            }
+            SphereKitError::RotationError(msg) => {
+                write!(f, "Point rotation error: {}", msg)
+            }
+            SphereKitError::EmptyPointSetError(msg) => {
+                write!(f, "Empty point set error: {}", msg)
             }
         }
     }

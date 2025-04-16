@@ -75,7 +75,7 @@ fn test_get_mesh_points_empty_polygon() {
     let result = get_mesh_points(&empty_polygon);
     assert!(result.is_err());
     match result {
-        Err(SphereKitError::MeshGenerationError(msg)) => {
+        Err(SphereKitError::EmptyPointSetError(msg)) => {
             assert_eq!(msg, "Outer ring cannot be empty");
         }, 
         Err(e) => panic!("Expected MeshGenerationError with specific message, got: {:?}", e),
