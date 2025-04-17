@@ -7,25 +7,50 @@ use ghx_constrained_delaunay::{
     constrained_triangulation::ConstrainedTriangulationConfiguration,
 };
 use crate::{
-    fibonacci_sphere, geometry::Point2D, ll_to_cartesian, rotate_points_to_south_pole, stereographic_projection, SphereKitError
+    fibonacci_sphere, 
+    geometry::Point2D, 
+    ll_to_cartesian, 
+    rotate_points_to_south_pole, 
+    stereographic_projection, 
+    SphereKitError
 };
 
 /*********************************/
-/*           Constants           */
+/*   Constants and definitions   */
 /*********************************/
 
 
 /// The default number of points to generate in a Fibonacci sphere distribution
-pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 3000;
+pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 4000;
 
-
+/// Represents the geometric data for a triangulated polygon mesh on a sphere.
+///
+/// This structure stores both the vertices (as 3D Cartesian coordinates) and the triangulation
+/// information that defines the mesh. The triangles are represented as indices into the vertices array.
+///
+/// # Fields
+///
+/// * `vertices` - 3D points forming the mesh in Cartesian coordinates (x, y, z).
+///   Each vertex is a tuple of (f64, f64, f64) representing a point on a unit sphere.
+///
+/// * `triangles` - Triangle indices for the mesh, flattened as [i1, i2, i3, j1, j2, j3, ...].
+///   Each consecutive triplet of indices defines one triangle by referencing vertices in the
+///   `vertices` field.
+#[derive(Debug, Clone)]
+pub struct PolygonMeshData {
+    /// 3D points forming the mesh (x, y, z coordinates)
+    pub vertices: Vec<(f64, f64, f64)>,
+    
+    /// Triangle indices for the mesh, flattened as [i1, i2, i3, j1, j2, j3, ...]
+    pub triangles: Vec<u32>,
+}
 
 /*********************************/
 /*           Functions           */
 /*********************************/
 
 
-pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f64)>, String> {
+pub fn handle_polygon_feature(geojson_feature: &str) -> Result<PolygonMeshData, String> {
 
     let geojson: GeoJson = geojson_feature.parse::<GeoJson>()
         .map_err(|err| format!("Failed to parse GeoJSON: {}", err))?;
@@ -52,12 +77,11 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f6
 
     // calculate edges for outer ring
     let mut edges: Vec<Edge> = Vec::with_capacity(outer_ring.len());
-    for i in 0..outer_ring.len() {
-        let edge: Edge = Edge { 
-            from: i as u32, 
-            to: ((i + 1) % outer_ring.len()) as u32 
+    for i in (0..outer_ring.len()).rev() {
+        let edge: Edge = Edge {
+            from: i as u32,
+            to: ((i + outer_ring.len() - 1) % outer_ring.len()) as u32
         };
-
         edges.push(edge);
     }
 
@@ -79,13 +103,18 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<Vec<(f64, f64, f6
         bin_vertex_density_power: 1.0,
     };
 
-    let triangles: Triangulation = constrained_triangulation_from_2d_vertices(&projected_points, &edges, config)
+    // generate mesh triangles using constrained delaunay triangulation
+    let delaunay_triangles: Triangulation = constrained_triangulation_from_2d_vertices(&projected_points, &edges, config)
         .map_err(|err| format!("Failed to generate triangulation: {}", err))?;
 
-    // constrained delauney triangulation on projected points
-    // return original points (and fibonacci ones) and triangles
+    let flattened_delaunay: Vec<u32> = delaunay_triangles.triangles.into_iter()
+        .flat_map(|triangle| triangle.into_iter())
+        .collect();
     
-    Ok(mesh_points)
+    Ok(PolygonMeshData {
+        vertices: mesh_points,
+        triangles: flattened_delaunay
+    })
 }
 
 /// Generates a set of 3D mesh points from a geographic polygon by combining the polygon's

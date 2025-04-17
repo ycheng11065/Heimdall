@@ -136,62 +136,6 @@ pub fn stereographic_projection(point: (f64, f64, f64)) -> Result<(f64, f64), Sp
     Ok((x_2d, y_2d))
 }
 
-/// Projects a point from a 2D plane back onto the unit sphere in 3D space using inverse stereographic projection.
-///
-/// This is the inverse operation of stereographic projection, mapping points from the plane z = 0
-/// back to the unit sphere. The projection is from the north pole (0, 0, 1) of the sphere.
-/// Every point on the plane has a unique corresponding point on the sphere (except for the north pole itself,
-/// which corresponds to the point at infinity on the plane).
-///
-/// # Arguments
-///
-/// * `point` - A 2D point (x, y) on the plane
-///
-/// # Returns
-///
-/// * `Ok((f64, f64, f64))` - A 3D point (x_3d, y_3d, z_3d) on the unit sphere
-/// * `Err(SphereKitError::InverseProjectionError)` - An error if the input coordinates are not finite numbers
-///
-/// # Mathematical formula
-///
-/// For a 2D point (x, y), the corresponding 3D point (x_3d, y_3d, z_3d) on the unit sphere is:
-/// * x_3d = 2x / (1 + x² + y²)
-/// * y_3d = 2y / (1 + x² + y²)
-/// * z_3d = (x² + y² - 1) / (1 + x² + y²)
-///
-/// # Examples
-///
-/// ```
-/// use spherekit::inverse_stereographic_projection;
-/// 
-/// let plane_point = (0.5, 0.5);
-/// 
-/// match inverse_stereographic_projection(plane_point) {
-///     Ok(sphere_point) => {
-///         let (x, y, z) = sphere_point;
-///         // Verify the point is on the unit sphere
-///         assert!((x*x + y*y + z*z - 1.0).abs() < 1e-10);
-///         println!("Sphere coordinates: ({}, {}, {})", x, y, z);
-///     },
-///     Err(e) => println!("Error: {}", e),
-/// }
-/// ```
-pub fn inverse_stereographic_projection(point: (f64, f64)) -> Result<(f64, f64, f64), SphereKitError> {
-    let (x, y) = point;
-
-    if x.is_nan() || y.is_nan() || x.is_infinite() || y.is_infinite() {
-        return Err(SphereKitError::InverseProjectionError("Input coordinates must be finite numbers".to_string()));
-    }
-    
-    let denom: f64 = 1.0 + x.powi(2) + y.powi(2);
-    
-    let x_3d: f64 = 2.0 * x / denom;
-    let y_3d: f64 = 2.0 * y / denom;
-    let z_3d: f64 = (denom - 2.0) / denom;
-    
-    Ok((x_3d, y_3d, z_3d))
-}
-
 /// Rotates a set of 3D points on a unit sphere so that their centroid aligns with the south pole.
 ///
 /// This function calculates the center point of the provided set of 3D points, then creates a rotation
