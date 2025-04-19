@@ -21,7 +21,7 @@ use crate::{
 
 
 /// The default number of points to generate in a Fibonacci sphere distribution
-pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 4000;
+pub const DEFAULT_FIBONACCI_POINT_COUNT: usize = 3000;
 
 /// Represents the geometric data for a triangulated polygon mesh on a sphere.
 ///
@@ -188,7 +188,7 @@ pub fn get_mesh_points(outer_ring: &Vec<(f64, f64)>) -> Result<Vec<(f64, f64, f6
         }
     }
 
-    let mut mesh_points_3d: Vec<(f64, f64, f64)> = Vec::new();//(mesh_points_2d.len());
+    let mut mesh_points_3d: Vec<(f64, f64, f64)> = Vec::new();
     for point in mesh_points_2d {
         let point_3d: (f64, f64, f64) = ll_to_cartesian(point.0, point.1)?;
         mesh_points_3d.push(point_3d);

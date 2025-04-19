@@ -43,15 +43,15 @@ export const renderGeoLines = (data, scene, geoFeature) => {
 }
 
 // Improved rendering for continent-sized polygons using stereographic projection
-export const renderGeoPolygons = (data, scene, geoFeature, showIndices = true) => {
+export const renderGeoPolygons = (data, scene, geoFeature, showIndices = false) => {
     const features = data.features;
 
     features.forEach(feature => {
         if (feature.geometry.type === "Polygon") {
-            let coordinates = handle_polygon_feature_wasm(JSON.stringify(feature));
+            let mesh_results = handle_polygon_feature_wasm(JSON.stringify(feature));
 
             // Create a triangulated spherical polygon using the Red Blob Games approach
-            const shape = createSphericalPolygon(coordinates);
+            const shape = createSphericalPolygon(mesh_results);
             
             let color;
             switch (geoFeature) {
@@ -87,22 +87,20 @@ export const renderGeoPolygons = (data, scene, geoFeature, showIndices = true) =
 };
   
 // Create a properly triangulated spherical polygon using the Red Blob Games approach
-function createSphericalPolygon(coordinates) {
-    
-
+function createSphericalPolygon(mesh_results) {
+    let coordinates = mesh_results.vertices;
     const scaledPositions = new Float32Array(coordinates.length * 3);
-
 
     for (let i = 0; i < coordinates.length; i++) {
         const vector = coordinates[i];
-        scaledPositions[i * 3] = vector[0] * GLOBE.RADIUS;
-        scaledPositions[i * 3 + 1] = vector[2] * GLOBE.RADIUS;
-        scaledPositions[i * 3 + 2] = -vector[1] * GLOBE.RADIUS;
+        scaledPositions[i * 3] = vector[0] * GLOBE.Z_CORRECTED_RADIUS;
+        scaledPositions[i * 3 + 1] = vector[2] * GLOBE.Z_CORRECTED_RADIUS;
+        scaledPositions[i * 3 + 2] = -vector[1] * GLOBE.Z_CORRECTED_RADIUS;
     }
-    
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(scaledPositions, 3));
+    geometry.setIndex(mesh_results.triangles);
 
     return geometry;
 }

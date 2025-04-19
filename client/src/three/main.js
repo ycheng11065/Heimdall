@@ -45,7 +45,7 @@ export const main = async (canvas) => {
     /**********************************************/
 
 
-    fetchGeoJSON('test2').then(geojson => {
+    fetchGeoJSON('ne_110m_land').then(geojson => {
         renderGeoPolygons(geojson, scene, GEO_FEATURE.LAND);
     }).catch(error => {
         console.error('Error processing GeoJSON:', error);

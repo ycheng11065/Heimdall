@@ -106,11 +106,17 @@ fn test_ll_to_cartesian_boundary_values() {
 
 #[test]
 fn test_ll_to_cartesian_err_out_of_range() {
-    // these should produce errors
-    let result1 = ll_to_cartesian(200.0, 0.0);
-    let result2 = ll_to_cartesian(0.0, 100.0);
+    // these should produce errors (well beyond the allowed epsilon)
+    let result1 = ll_to_cartesian(180.2, 0.0);  // just over the allowed threshold
+    let result2 = ll_to_cartesian(0.0, 90.2);   // just over the allowed threshold
     
     assert!(result1.is_err() && result2.is_err());
+    
+    // these should be acceptable (within the epsilon tolerance)
+    let result3 = ll_to_cartesian(180.05, 0.0); // within the allowed threshold
+    let result4 = ll_to_cartesian(0.0, 90.05);  // within the allowed threshold
+    
+    assert!(result3.is_ok() && result4.is_ok());
 }
 
 #[test]

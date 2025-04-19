@@ -69,10 +69,14 @@ impl Vertex2d for Point2D {
 /// assert!(ll_to_cartesian(190.0, 0.0).is_err()); // Invalid coordinates
 /// ```
 pub fn ll_to_cartesian(longitude: f64, latitude: f64) -> Result<(f64, f64, f64), SphereKitError> {
-    if longitude.abs() > 180.0 || latitude.abs() > 90.0 {
+
+    if longitude.abs() > (180.0 + 0.1)  || latitude.abs() > (90.0 + 0.1) { // return error if data is outside of reasonable floating point error
         return Err(SphereKitError::CoordinateRangeError { longitude, latitude });
     }
-    
+
+    let epsilon: f64 = 1e-10;
+    let (longitude, latitude) = sanitize_coordinates(longitude, latitude, epsilon);
+
     let longitude_rad: f64 = longitude * PI / 180.0;
     let latitude_rad: f64 = latitude * PI / 180.0;
     
@@ -203,4 +207,42 @@ pub fn rotate_points_to_south_pole(points: &Vec<(f64, f64, f64)>) -> Result<Vec<
     }
 
     Ok(rotated_points)
+}
+
+
+/// Helper function to sanitizes geographic coordinates to ensure they fall within valid ranges.
+/// 
+/// This function corrects coordinates that are just slightly outside the valid ranges
+/// due to floating-point precision issues. It clamps longitude to [-180, 180] and 
+/// latitude to [-90, 90] if they're within a small epsilon of the boundaries.
+///
+/// # Arguments
+///
+/// * `longitude` - The longitude in decimal degrees 
+/// * `latitude` - The latitude in decimal degrees
+/// * `epsilon` - The tolerance for floating-point comparisons (default: 1e-10)
+///
+/// # Returns
+///
+/// * `(f64, f64)` - A tuple of sanitized (longitude, latitude) coordinates
+fn sanitize_coordinates(longitude: f64, latitude: f64, epsilon: f64) -> (f64, f64) {
+    let sanitized_longitude: f64 = 
+    if longitude > 180.0 && longitude <= 180.0 + epsilon {
+        180.0
+    } else if longitude < -180.0 && longitude >= -180.0 - epsilon {
+        -180.0
+    } else {
+        longitude
+    };
+    
+    let sanitized_latitude: f64 = 
+    if latitude > 90.0 && latitude <= 90.0 + epsilon {
+        90.0
+    } else if latitude < -90.0 && latitude >= -90.0 - epsilon {
+        -90.0
+    } else {
+        latitude
+    };
+    
+    (sanitized_longitude, sanitized_latitude)
 }
