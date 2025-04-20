@@ -1,10 +1,9 @@
-package com.application.server.model;
+package com.application.server.model.Satellite;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 public class Satellite {
     @JsonProperty("NORAD_CAT_ID")
@@ -51,4 +50,64 @@ public class Satellite {
 
     @JsonProperty("SEMIMAJOR_AXIS")
     private double semimajorAxis;
+
+    public int getNoradCatId() {
+        return noradCatId;
+    }
+
+    public String getObjectName() {
+        return objectName;
+    }
+
+    public String getObjectType() {
+        return objectType;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public LocalDate getLaunchDate() {
+        return launchDate;
+    }
+
+    public LocalDate getDecayDate() {
+        return decayDate;
+    }
+
+    public LocalDateTime getEpoch() {
+        return epoch;
+    }
+
+    public String getTleLine1() {
+        return tleLine1;
+    }
+
+    public String getTleLine2() {
+        return tleLine2;
+    }
+
+    public double getInclination() {
+        return inclination;
+    }
+
+    public double getEccentricity() {
+        return eccentricity;
+    }
+
+    public double getPeriod() {
+        return period;
+    }
+
+    public double getApoapsis() {
+        return apoapsis;
+    }
+
+    public double getPeriapsis() {
+        return periapsis;
+    }
+
+    public double getSemimajorAxis() {
+        return semimajorAxis;
+    }
 }
