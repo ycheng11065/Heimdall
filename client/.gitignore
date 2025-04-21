@@ -1,6 +1,8 @@
 # Project files
 coastlines
-
+pkg/
+target/
+Cargo.lock
 
 # Logs
 logs
