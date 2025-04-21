@@ -3,7 +3,8 @@
  * rendered using Three.js. It provides a canvas element for rendering the globe and an optional debug menu.
  * @module GlobeScene
  */
-import { useEffect, useRef } from 'react';
+
+import { useEffect, useRef, useState } from 'react';
 import { main } from '../../three/main.js';
 import DebugMenu from '../DebugMenu/index.jsx';
 
@@ -30,51 +31,71 @@ import DebugMenu from '../DebugMenu/index.jsx';
 const GlobeScene = ({ enableDebugMenu = false }) => {
     const canvasRef = useRef(null);
 
+
+    const [debugOptions, setDebugOptions] = useState({
+        wireFrame: false,
+        showIndices: false,
+        showGlobe: true,
+        showLand: true,
+        showLakes: true,
+        showRivers: true,
+    });
+
+
     useEffect(() => {
-    if (!canvasRef.current) {
-        console.error('Canvas element not found');
-        return;
-    }
-
-    const handleResize = () => {
-        if (canvasRef.current) {
-        canvasRef.current.width = window.innerWidth;
-        canvasRef.current.height = window.innerHeight;
+        if (!canvasRef.current) {
+            console.error('Canvas element not found');
+            return;
         }
-    }
 
-    window.addEventListener('resize', handleResize);
+        const handleResize = () => {
+            if (canvasRef.current) {
+            canvasRef.current.width = window.innerWidth;
+            canvasRef.current.height = window.innerHeight;
+            }
+        }
 
-    handleResize();
+        window.addEventListener('resize', handleResize);
 
-    main(canvasRef.current);
+        handleResize();
 
-    return () => {
-        window.removeEventListener('resize', handleResize);
-    };
+        main(canvasRef.current);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
     }, []);
 
+
     return (
-        <div>
+        <>
             {/* Debug menu - conditionally rendered based on enableDebugMenu prop */}
             {enableDebugMenu && (
-            <div style={{
-                position: 'absolute',
-                top: '16px',
-                left: '16px',
-                zIndex: 10 // ensure the debug menu is above the canvas
-            }}>
-                <DebugMenu />
-            </div>
+                <div style={{
+                    position: 'absolute',
+                    top: '16px',
+                    left: '16px',
+                    zIndex: 10 // ensure the debug menu is above the canvas
+                }}>
+
+                    <DebugMenu 
+                        debugOptions={debugOptions} 
+                        setDebugOptions={setDebugOptions} 
+                    />
+
+                </div>
             )}
             
+
+
+
             {/* Canvas for Three.js rendering */}
             <canvas ref={canvasRef} style={{
-            width: '100%',
-            height: '100%',
-            display: 'block'
+                width: '100%',
+                height: '100%',
+                display: 'block'
             }} />
-        </div>
+        </>
     );
 }
 
