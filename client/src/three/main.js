@@ -51,6 +51,12 @@ export const main = async (canvas) => {
         console.error('Error processing GeoJSON:', error);
     });
 
+    fetchGeoJSON('ne_110m_lakes').then(geojson => {
+        renderGeoPolygons(geojson, scene, GEO_FEATURE.LAKES);
+    }).catch(error => {
+        console.error('Error processing GeoJSON:', error);
+    });
+
     /**********************************************/
     /*                 Main loop                  */
     /**********************************************/
@@ -74,6 +80,7 @@ export const main = async (canvas) => {
         globe.dispose();
     };
 }
+
 
 // TEMPORARY to work on visualization
 async function fetchGeoJSON(file_name) {

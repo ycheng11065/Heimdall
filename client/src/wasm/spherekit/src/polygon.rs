@@ -50,7 +50,7 @@ pub struct PolygonMeshData {
 /*********************************/
 
 
-pub fn handle_polygon_feature(geojson_feature: &str) -> Result<PolygonMeshData, String> {
+pub fn generate_polygon_feature_mesh(geojson_feature: &str) -> Result<PolygonMeshData, String> {
 
     let geojson: GeoJson = geojson_feature.parse::<GeoJson>()
         .map_err(|err| format!("Failed to parse GeoJSON: {}", err))?;

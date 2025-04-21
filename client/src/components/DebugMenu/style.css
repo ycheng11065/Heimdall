@@ -1,0 +1,63 @@
+.debug-container {
+	position: relative;
+	width: fit-content;
+}
+
+/* Button styling */
+.debug-toggle-btn {
+	background-color: #e2e2e2;
+	border: none;
+	border-radius: 4px;
+	padding: 8px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.2s;
+}
+
+.debug-toggle-btn:hover {
+	background-color: #d0d0d0;
+}
+
+/* Hambuger and X icon */
+.icon-container {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.icon {
+	display: block;
+	width: 100%;
+}
+
+/* Menu panel */
+.debug-panel {
+	margin-top: 4px;
+	width: 200px;
+	background-color: #f5f5f5;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	padding: 8px;
+}
+
+/* Debug options */
+.debug-options {
+	display: flex;
+	flex-direction: column;
+}
+
+.debug-option {
+	padding: 6px 8px;
+	margin: 2px 0;
+	cursor: pointer;
+	border-radius: 4px;
+}
+
+.debug-option:hover {
+	background-color: #e0e0e0;
+}

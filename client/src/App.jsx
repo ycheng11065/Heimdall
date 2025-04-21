@@ -4,7 +4,7 @@ import GlobeScene from './components/GlobeScene';
 function App() {
   return (
     <div>
-      <GlobeScene />
+      <GlobeScene enableDebugMenu={true} />
     </div>
   );
 }

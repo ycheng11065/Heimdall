@@ -2,7 +2,7 @@ import * as UTILS from "./utils.js";
 import { GEO_FEATURE, GLOBE } from "../constants.js";
 import * as THREE from "three";
 import { renderShapeIndices } from "./renderHelpers.js";
-import { handle_polygon_feature_wasm } from "../../wasm/spherekit/pkg/spherekit.js";
+import { generate_polygon_feature_mesh_wasm } from "../../wasm/spherekit/pkg/spherekit.js";
 
 export const renderGeoLines = (data, scene, geoFeature) => {
     const features = data.features;
@@ -48,16 +48,14 @@ export const renderGeoPolygons = (data, scene, geoFeature, showIndices = false) 
 
     features.forEach(feature => {
         if (feature.geometry.type === "Polygon") {
-            let mesh_results = handle_polygon_feature_wasm(JSON.stringify(feature));
+            let mesh_results = generate_polygon_feature_mesh_wasm(JSON.stringify(feature));
 
             // Create a triangulated spherical polygon using the Red Blob Games approach
             const shape = createSphericalPolygon(mesh_results);
             
             let color;
+            let opacity = 1.0;
             switch (geoFeature) {
-                case GEO_FEATURE.OCEANS:
-                    color = 0x0077be; // Deeper blue for oceans
-                break;
                 case GEO_FEATURE.LAKES:
                     color = 0x00FFFF;
                 break;
@@ -71,7 +69,7 @@ export const renderGeoPolygons = (data, scene, geoFeature, showIndices = false) 
             const material = new THREE.MeshBasicMaterial({
                 color: color,
                 transparent: true,
-                opacity: 0.8,
+                opacity: opacity,
                 side: THREE.DoubleSide
             });
 

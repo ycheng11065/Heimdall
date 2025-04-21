@@ -1,4 +1,4 @@
-use spherekit::handle_polygon_feature;
+use spherekit::generate_polygon_feature_mesh;
 
 
 #[test]
@@ -21,7 +21,7 @@ fn test_valid_polygon() {
         "properties": {}
     }"#;
     
-    let result = handle_polygon_feature(geojson_feature);
+    let result = generate_polygon_feature_mesh(geojson_feature);
     assert!(result.is_ok());
 }
 
@@ -52,7 +52,7 @@ fn test_valid_polygon_with_holes() {
         "properties": {}
     }"#;
     
-    let result = handle_polygon_feature(geojson_feature);
+    let result = generate_polygon_feature_mesh(geojson_feature);
     assert!(result.is_ok());
 }
 
@@ -75,7 +75,7 @@ fn test_invalid_json() {
         "properties": {}
     }"#;  // missing closing brace
     
-    let result = handle_polygon_feature(geojson_feature);
+    let result = generate_polygon_feature_mesh(geojson_feature);
     assert!(result.is_err());
     assert!(result.unwrap_err().contains("Failed to parse GeoJSON"));
 }
@@ -88,7 +88,7 @@ fn test_not_a_feature() {
         "features": []
     }"#;
     
-    let result = handle_polygon_feature(geojson_feature);
+    let result = generate_polygon_feature_mesh(geojson_feature);
     assert!(result.is_err());
     assert!(result.unwrap_err().contains("Failed to convert to Feature"));
 }
@@ -101,7 +101,7 @@ fn test_missing_geometry() {
         "properties": {}
     }"#;
     
-    let result = handle_polygon_feature(geojson_feature);
+    let result = generate_polygon_feature_mesh(geojson_feature);
     assert!(result.is_err());
     assert!(result.unwrap_err().contains("Failed to parse GeoJSON"));
 }
@@ -118,7 +118,7 @@ fn test_non_polygon_geometry() {
         "properties": {}
     }"#;
     
-    let result = handle_polygon_feature(geojson_feature);
+    let result = generate_polygon_feature_mesh(geojson_feature);
     assert!(result.is_err());
     assert!(result.unwrap_err().contains("Expected a polygon"));
 }
@@ -135,7 +135,7 @@ fn test_empty_polygon() {
         "properties": {}
     }"#;
     
-    let result = handle_polygon_feature(geojson_feature);
+    let result = generate_polygon_feature_mesh(geojson_feature);
     assert!(result.is_err());
     assert!(result.unwrap_err().contains("Polygon is empty"));
 }
