@@ -1,6 +1,9 @@
 package com.application.server.service;
 
-import com.application.server.model.Satellite;
+import com.application.server.model.Satellite.Satellite;
+import com.application.server.model.Satellite.SatelliteEntity;
+import com.application.server.model.Satellite.SatelliteMapper;
+import com.application.server.repository.SatelliteRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -9,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import org.springframework.http.HttpHeaders;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,8 +38,9 @@ public class SatelliteService {
     );
 
     private final WebClient.Builder webClientBuilder;
-    private WebClient webClient;
     private final SpaceTrackAuthService authService;
+    private final SatelliteRepository satelliteRepository;
+    private WebClient webClient;
 
     @Value("${spacetrack.base}")
     private String baseUrl;
@@ -52,11 +57,19 @@ public class SatelliteService {
     @Value("${spacetrack.iridium}")
     private String iridiumSatellitesEndpoint;
 
+    @Value("${spacetrack.one}")
+    private String oneSatelliteEndpoint;
+
     // Injecting WebClient.Builder dependency
-    public SatelliteService(WebClient.Builder webClientBuilder, SpaceTrackAuthService authService) {
-        // Set API base URL
-        this.webClientBuilder = webClientBuilder;
-        this.authService = authService;
+    public SatelliteService(
+                WebClient.Builder webClientBuilder,
+                SpaceTrackAuthService authService,
+                SatelliteRepository satelliteRepository) {
+
+            // Set API base URL
+            this.webClientBuilder = webClientBuilder;
+            this.authService = authService;
+            this.satelliteRepository = satelliteRepository;
     }
 
     @PostConstruct
@@ -84,6 +97,11 @@ public class SatelliteService {
     public Flux<Satellite> getAllIridiumData() {
         System.out.println("Fetching all Iridium data");
         return querySatelliteGroup(iridiumSatellitesEndpoint);
+    }
+
+    public Flux<Satellite> getOneData() {
+        System.out.println("Fetching one satellite");
+        return querySatelliteGroup(oneSatelliteEndpoint);
     }
 
     // Query all important historical satellites (for space nerds)
@@ -119,4 +137,76 @@ public class SatelliteService {
                                 .bodyToFlux(Satellite.class)
                 );
     }
+
+    public Mono<SatelliteEntity> saveSatelliteToDb(Satellite satellite) {
+        SatelliteEntity entity = SatelliteMapper.toEntity(satellite);
+        return satelliteRepository.save(entity);
+    }
+
+    public Flux<SatelliteEntity> saveAllSatelliteToDb(Flux<Satellite> satellites) {
+        return satellites.map(SatelliteMapper::toEntity).flatMap(satelliteRepository::save);
+    }
+
+    public Flux<SatelliteEntity> populateAllSatellites() {
+        return querySatelliteGroup(allActiveSatellitesEndpoint).transform(this::saveAllSatelliteToDb)
+                .doOnNext(e -> System.out.println("Saved: " + e.getObjectName()));
+    }
+
+    public Flux<SatelliteEntity> updateSatelliteData() {
+        return getAllSatelliteData()
+                .flatMap(this::updateSatelliteDatabase)
+                .doOnNext(updated -> System.out.println("Processed: NORAD ID " + updated.getNoradCatId()))
+                .doOnError(err -> System.err.println("Process error: " + err.getMessage()))
+                .doOnComplete(() -> System.out.println("Satellite update protocol complete!"));
+    }
+
+//    public Flux<SatelliteEntity> updateSatelliteData() {
+//        return getOneData()
+//                .concatMap(this::updateSatelliteDatabase)
+//                .doOnNext(updated -> System.out.println("Updated: " + updated.getObjectName()))
+//                .doOnError(err -> System.err.println("Update error: " + err.getMessage()))
+//                .doOnComplete(() -> System.out.println("Satellite data update complete!"));
+//    }
+
+    /**
+     * ...
+     */
+    public Mono<SatelliteEntity> updateSatelliteDatabase(Satellite updatedSatellite) {
+        return satelliteRepository.findByNoradCatId(updatedSatellite.getNoradCatId())
+                .flatMap(existing -> {
+                    boolean tleChanged = !existing.getTleLine1().equals(updatedSatellite.getTleLine1()) ||
+                            !existing.getTleLine2().equals(updatedSatellite.getTleLine2());
+
+                    if (!tleChanged) {
+                        System.out.println("Satellite " + existing.getNoradCatId() + " does not require update!");
+                        return Mono.just(existing); // nothing to update
+                    }
+
+                    // Update changing info
+                    existing.setTleLine1(updatedSatellite.getTleLine1());
+                    existing.setTleLine2(updatedSatellite.getTleLine2());
+                    existing.setEpoch(updatedSatellite.getEpoch());
+                    existing.setObjectName(updatedSatellite.getObjectName());
+                    existing.setObjectType(updatedSatellite.getObjectType());
+                    existing.setCountryCode(updatedSatellite.getCountryCode());
+                    existing.setDecayDate(updatedSatellite.getDecayDate());
+                    existing.setInclination(updatedSatellite.getInclination());
+                    existing.setEccentricity(updatedSatellite.getEccentricity());
+                    existing.setPeriod(updatedSatellite.getPeriod());
+                    existing.setApoapsis(updatedSatellite.getApoapsis());
+                    existing.setPeriapsis(updatedSatellite.getPeriapsis());
+                    existing.setSemimajorAxis(updatedSatellite.getSemimajorAxis());
+                    existing.setLastUpdate(LocalDateTime.now());
+
+                    return satelliteRepository.save(existing); // write to DB
+                })
+                .switchIfEmpty( // handle new satellite
+                        Mono.defer(() -> {
+                            System.out.println("New satellite " + updatedSatellite.getNoradCatId() + " discovered!");
+                            SatelliteEntity newEntity = SatelliteMapper.toEntity(updatedSatellite);
+                            newEntity.setLastUpdate(LocalDateTime.now());
+                            return satelliteRepository.save(newEntity);
+                        }));
+    }
+
 }
