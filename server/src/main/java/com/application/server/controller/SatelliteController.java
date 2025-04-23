@@ -1,6 +1,7 @@
 package com.application.server.controller;
 
 import com.application.server.model.Satellite.Satellite;
+import com.application.server.model.Satellite.SatelliteDTO;
 import com.application.server.model.Satellite.SatelliteEntity;
 import com.application.server.service.SatelliteService;
 import org.springframework.web.bind.annotation.*;
@@ -19,34 +20,34 @@ public class SatelliteController {
         this.satelliteService = satelliteService;
     }
 
-    @PostMapping
-    public Mono<SatelliteEntity> saveSatelliteToDb(@RequestBody Satellite satellite) {
-        return satelliteService.saveSatelliteToDb(satellite);
-    }
+//    @PostMapping
+//    public Mono<SatelliteEntity> saveSatelliteToDb(@RequestBody Satellite satellite) {
+//        return satelliteService.saveSatelliteToDb(satellite);
+//    }
+//
+//    @PostMapping("/batch")
+//    public Flux<SatelliteEntity> saveSatelliteToDb(@RequestBody List<Satellite> satellites) {
+//        return satelliteService.saveAllSatelliteToDb(Flux.fromIterable(satellites));
+//    }
 
-    @PostMapping("/batch")
-    public Flux<SatelliteEntity> saveSatelliteToDb(@RequestBody List<Satellite> satellites) {
-        return satelliteService.saveAllSatelliteToDb(Flux.fromIterable(satellites));
-    }
-
-    @GetMapping
-    public Flux<Satellite> getAllSatellites() {
-        return satelliteService.getAllSatelliteData();
-    }
+//    @GetMapping
+//    public Flux<Satellite> getAllSatellites() {
+//        return satelliteService.getAllSatelliteData();
+//    }
 
     @GetMapping("/starlink")
-    public Flux<Satellite> getStarlinkSatellites() {
-        return satelliteService.getAllStarlinkData();
+    public Flux<SatelliteDTO> getStarlinkSatellites() {
+        return satelliteService.fetchStarlinkSatellites();
     }
 
     @GetMapping("/oneweb")
-    public Flux<Satellite> getOneWebSatellites() {
-        return satelliteService.getAllOneWebData();
+    public Flux<SatelliteDTO> getOneWebSatellites() {
+        return satelliteService.fetchOnewebSatellites();
     }
 
     @GetMapping("/iridium")
-    public Flux<Satellite> getIridiumSatellites() {
-        return satelliteService.getAllIridiumData();
+    public Flux<SatelliteDTO> getIridiumSatellites() {
+        return satelliteService.fetchIridiumSatellites();
     }
 
     @GetMapping("/history")
@@ -54,18 +55,18 @@ public class SatelliteController {
         return satelliteService.getImportantSatellitesData();
     }
 
-    @GetMapping("/search/{name}")
-    public Flux<Satellite> getHistoricalSatellites(@PathVariable String name) {
-        return satelliteService.getSearchedSatellitesData(name);
-    }
-
-    @GetMapping("/norad/{noradId}")
-    public Flux<Satellite> getHistoricalSatellites(@PathVariable int noradId) {
-        return satelliteService.getNORADSatelliteData(noradId);
-    }
-
-    @GetMapping("/all/populate")
-    public Flux<SatelliteEntity> populateAllSatellites() {
-        return satelliteService.populateAllSatellites();
-    }
+//    @GetMapping("/search/{name}")
+//    public Flux<Satellite> getHistoricalSatellites(@PathVariable String name) {
+//        return satelliteService.getSearchedSatellitesData(name);
+//    }
+//
+//    @GetMapping("/norad/{noradId}")
+//    public Flux<Satellite> getHistoricalSatellites(@PathVariable int noradId) {
+//        return satelliteService.getNORADSatelliteData(noradId);
+//    }
+//
+//    @GetMapping("/all/populate")
+//    public Flux<SatelliteEntity> populateAllSatellites() {
+//        return satelliteService.populateAllSatellites();
+//    }
 }

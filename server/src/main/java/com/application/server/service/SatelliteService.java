@@ -1,6 +1,7 @@
 package com.application.server.service;
 
 import com.application.server.model.Satellite.Satellite;
+import com.application.server.model.Satellite.SatelliteDTO;
 import com.application.server.model.Satellite.SatelliteEntity;
 import com.application.server.model.Satellite.SatelliteMapper;
 import com.application.server.repository.SatelliteRepository;
@@ -126,6 +127,37 @@ public class SatelliteService {
         return querySatelliteGroup(endpoint);
     }
 
+    public Flux<SatelliteDTO> fetchStarlinkSatellites() {
+        Flux<SatelliteEntity> starlinkEntities = satelliteRepository.fetchStarlink();
+
+        return fetchSatelliteDTO(starlinkEntities);
+    }
+
+    public Flux<SatelliteDTO> fetchOnewebSatellites() {
+        Flux<SatelliteEntity> onewebEntities = satelliteRepository.fetchOneweb();
+
+        return fetchSatelliteDTO(onewebEntities);
+    }
+
+    public Flux<SatelliteDTO> fetchIridiumSatellites() {
+        Flux<SatelliteEntity> iridiumEntities = satelliteRepository.fetchIridium();
+
+        return fetchSatelliteDTO(iridiumEntities);
+    }
+
+    public Flux<SatelliteDTO> fetchSatelliteDTO(Flux<SatelliteEntity> satelliteEntities) {
+        return satelliteEntities.map(entity -> new SatelliteDTO(
+                entity.getNoradCatId(),
+                entity.getObjectName(),
+                entity.getCountryCode(),
+                entity.getLaunchDate(),
+                entity.getDecayDate(),
+                entity.getLastUpdate(),
+                entity.getTleLine1(),
+                entity.getTleLine2()
+        ));
+    }
+
     public Flux<Satellite> querySatelliteGroup(String endpoint) {
         return authService.login()
                 .flatMapMany(cookie ->
@@ -208,5 +240,4 @@ public class SatelliteService {
                             return satelliteRepository.save(newEntity);
                         }));
     }
-
 }
