@@ -36,7 +36,6 @@ import "./style.css";
  *
  * @returns {JSX.Element} A collapsible menu with toggle switches for each debug option
  */
-
 const DebugMenu = ({ debugOptions, setDebugOptions }) => {
     const [isOpen, setIsOpen] = useState(false);
 
