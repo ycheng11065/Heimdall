@@ -1,5 +1,9 @@
 ## References & Acknowledgements
 
+
+![Procedurally curved Earth mesh with point-based continental generation](https://github.com/user-attachments/assets/2ec19871-0a8d-4f2e-8bbe-6ecc225d6ae5)
+*Procedurally curved Earth mesh with point-based continental generation*
+
 ### Sources
 
 #### Articles and References
