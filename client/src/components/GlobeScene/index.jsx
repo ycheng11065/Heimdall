@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { main } from '../../three/main.js';
+import { setupGlobeScene } from '../../three/main.js';
 import DebugMenu from '../DebugMenu/index.jsx';
 
 /**
@@ -30,7 +30,7 @@ import DebugMenu from '../DebugMenu/index.jsx';
  */
 const GlobeScene = ({ enableDebugMenu = false }) => {
     const canvasRef = useRef(null);
-
+    const sceneRef = useRef(null);
 
     const [debugOptions, setDebugOptions] = useState({
         wireFrame: false,
@@ -41,7 +41,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
         showRivers: true,
     });
 
-
+    // Initialize the Three.js scene when the component mounts
     useEffect(() => {
         if (!canvasRef.current) {
             console.error('Canvas element not found');
@@ -50,21 +50,31 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 
         const handleResize = () => {
             if (canvasRef.current) {
-            canvasRef.current.width = window.innerWidth;
-            canvasRef.current.height = window.innerHeight;
+                canvasRef.current.width = window.innerWidth;
+                canvasRef.current.height = window.innerHeight;
             }
         }
 
         window.addEventListener('resize', handleResize);
 
         handleResize();
-
-        main(canvasRef.current);
+        
+        setupGlobeScene(canvasRef.current).then((globeSceneManager) => {
+            sceneRef.current = globeSceneManager;
+            sceneRef.current.startAnimationLoop();
+        });
 
         return () => {
             window.removeEventListener('resize', handleResize);
+            sceneRef.current?.stopAnimationLoop();
         };
     }, []);
+
+
+    // Update the scene when debug options change
+    useEffect(() => {
+
+    }, [debugOptions]);
 
 
     return (

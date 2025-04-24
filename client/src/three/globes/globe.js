@@ -5,8 +5,8 @@ class Globe {
     constructor(radius = GLOBE.RADIUS, segments = GLOBE.SEGMENTS) {
         this.radius = radius;
         this.segments = segments;
+        this.material = this.#createMaterial();
         this.geometry = this.#createGeometry();
-        this.material = this._createMaterial();
         this.mesh = this.#createMesh();
     }
     
@@ -20,13 +20,30 @@ class Globe {
         return mesh;
     }
 
-    _createMaterial() {
+    #createMaterial() {
         const material = new MeshBasicMaterial({
             color: GLOBE.COLOR,
             wireframe: GLOBE.WIREFRAME,
-            opacity: GLOBE.WIREFRAME_OPACITY,
+            transparent: GLOBE.TRANSPARENT,
+            opacity: GLOBE.OPACITY,
         });
         return material;
+    }
+
+    setColor(color) {
+        this.material.color.set(color);
+    }
+
+    setWireframe(wireframe) {
+        this.material.wireframe = wireframe;
+    }
+
+    setOpacity(opacity) {
+        this.material.opacity = opacity;
+    }
+    
+    setTransparent(transparent) {
+        this.material.transparent = transparent;
     }
 
     getMesh() {
