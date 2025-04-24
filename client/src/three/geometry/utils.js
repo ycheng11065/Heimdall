@@ -1,4 +1,7 @@
-import { Vector3, Quaternion, Matrix4 } from 'three';
+import { Vector3 } from 'three';
+import { GLOBE } from '../constants.js';
+import { generate_polygon_feature_mesh_wasm } from '../../wasm/spherekit/pkg/spherekit.js';
+import * as THREE from 'three';
 
 
 /**
@@ -23,4 +26,50 @@ export const llToVector3 = (lon, lat, radius) => {
 
 
     return new Vector3(x, y, z);
+}
+
+/**
+ * Creates a Three.js BufferGeometry for a spherical polygon from GeoJSON feature data.
+ * 
+ * This function uses WebAssembly to generate mesh data for a spherical polygon representation
+ * of geographic features. It converts the generated vertices to the correct coordinate system
+ * and scale for globe rendering.
+ * 
+ * The WASM module must be initialized before calling this function.
+ * 
+ * @param {Object} feature - A GeoJSON feature object containing polygon geometry
+ * @returns {THREE.BufferGeometry} A Three.js geometry representing the spherical polygon
+ * @throws {Error} If the WASM module is not initialized or if polygon generation fails
+ * 
+ * @example
+ * // After WASM initialization
+ * const landFeature = geojson.features[0];
+ * const geometry = getSphericalPolygonGeometry(landFeature);
+ * const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+ * const mesh = new THREE.Mesh(geometry, material);
+ * scene.add(mesh);
+ */
+export const generateSphericalPolygonGeometry = (feature) => {
+    if (typeof generate_polygon_feature_mesh_wasm !== 'function') {
+        console.error('WASM module not initialized. Call initWasm() first.');
+        return new THREE.BufferGeometry(); 
+    }
+
+    let meshResults = generate_polygon_feature_mesh_wasm(JSON.stringify(feature));
+
+    let coordinates = meshResults.vertices;
+    const scaledPositions = new Float32Array(coordinates.length * 3);
+
+    for (let i = 0; i < coordinates.length; i++) {
+        const vector = coordinates[i];
+        scaledPositions[i * 3] = vector[0] * GLOBE.Z_CORRECTED_RADIUS;
+        scaledPositions[i * 3 + 1] = vector[2] * GLOBE.Z_CORRECTED_RADIUS;
+        scaledPositions[i * 3 + 2] = -vector[1] * GLOBE.Z_CORRECTED_RADIUS;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(scaledPositions, 3));
+    geometry.setIndex(meshResults.triangles);
+
+    return geometry;
 }

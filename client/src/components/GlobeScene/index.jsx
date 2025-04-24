@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { setupGlobeScene } from '../../three/main.js';
+import { setupGlobeScene } from '../../three/globeSceneCore.js';
 import DebugMenu from '../DebugMenu/index.jsx';
 
 /**
@@ -73,7 +73,12 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 
     // Update the scene when debug options change
     useEffect(() => {
+        if (sceneRef.current) {
+            // eslint-disable-next-line no-unused-vars
+            const { wireFrame, showIndices, showGlobe, showLand, showLakes, showRivers } = debugOptions;
 
+            sceneRef.current.earth.setWireframe(wireFrame);
+        }
     }, [debugOptions]);
 
 
