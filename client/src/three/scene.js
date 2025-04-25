@@ -23,14 +23,12 @@ class GlobeSceneManager {
 		/**
 		 * The canvas element for rendering.
 		 * @type {HTMLCanvasElement}
-		 * @private
 		 */
 		this.canvas = canvas;
 
 		/**
 		 * The Three.js WebGL renderer.
 		 * @type {THREE.WebGLRenderer|null}
-		 * @private
 		 */
 		this.renderer = null;
 
@@ -44,29 +42,24 @@ class GlobeSceneManager {
 		/**
 		 * The camera controller for the scene.
 		 * @type {GlobeCamera|null}
-		 * @private
 		 */
 		this.camera = null;
 
 		/**
 		 * The Earth globe model.
 		 * @type {Earth|null}
-		 * @private
 		 */
 		this.earth = null;
 
 		/**
 		 * ID of the current animation frame request.
 		 * @type {number|null}
-		 * @private
 		 */
 		this.animationFrameId = null;
 
-		// Bind methods
 		this._onWindowResize = this._onWindowResize.bind(this);
 		this._render = this._render.bind(this);
 
-		// Initialize the scene
 		this._init();
 	}
 
@@ -101,8 +94,18 @@ class GlobeSceneManager {
 	}
 
 	/**
+	 * Handles window resize events by updating renderer size and camera aspect.
+	 * @private
+	 */
+	_onWindowResize() {
+		const width = this.canvas.clientWidth;
+		const height = this.canvas.clientHeight;
+		this.renderer.setSize(width, height, false);
+		this.camera.updateAspect(width, height);
+	}
+
+	/**
 	 * Starts the animation loop if not already running.
-	 * @public
 	 */
 	startAnimationLoop() {
 		if (!this.animationFrameId) {
@@ -113,7 +116,6 @@ class GlobeSceneManager {
 
 	/**
 	 * Stops the animation loop if it's running.
-	 * @public
 	 */
 	stopAnimationLoop() {
 		if (this.animationFrameId) {
@@ -125,7 +127,6 @@ class GlobeSceneManager {
 	/**
 	 * Cleans up resources, stops animations, and removes event listeners.
 	 * Call this method when the scene is no longer needed to prevent memory leaks.
-	 * @public
 	 */
 	dispose() {
 		this.stopAnimationLoop();
@@ -134,17 +135,6 @@ class GlobeSceneManager {
 		this.renderer.dispose();
 		this.camera.dispose();
 		this.earth.dispose();
-	}
-
-	/**
-	 * Handles window resize events by updating renderer size and camera aspect.
-	 * @private
-	 */
-	_onWindowResize() {
-		const width = this.canvas.clientWidth;
-		const height = this.canvas.clientHeight;
-		this.renderer.setSize(width, height, false);
-		this.camera.updateAspect(width, height);
 	}
 }
 

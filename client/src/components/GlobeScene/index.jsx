@@ -62,6 +62,19 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 	});
 
 	/**
+	 * Debug float values for controlling opacity of scene elements
+	 * @type {Object}
+	 * @property {number} globeOpacity - Opacity value for the base globe (0.0-1.0)
+	 * @property {number} landOpacity - Opacity value for land masses (0.0-1.0)
+	 * @property {number} lakesOpacity - Opacity value for lakes (0.0-1.0)
+	 */
+	const [debugFloats, setDebugFloats] = useState({
+		globeOpacity: 1.0,
+		landOpacity: 1.0,
+		lakesOpacity: 1.0
+	});
+
+	/**
 	 * Initialize the Three.js scene when the component mounts
 	 * Sets up the canvas, handles window resizing, and manages the animation loop
 	 */
@@ -94,7 +107,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		return () => {
 			window.removeEventListener('resize', handleResize);
 			sceneRef.current?.stopAnimationLoop();
-            sceneRef.current?.dispose();
+			sceneRef.current?.dispose();
 		};
 	}, []);
 
@@ -116,6 +129,21 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		showLakeIndices ? earth.showLakeIndices() : earth.hideLakeIndices();
 	}, [debugOptions]);
 
+	/**
+	 * Updates the opacity of scene elements when debug float values change
+	 * Controls transparency of the globe, land masses, and lakes
+	 */
+	useEffect(() => {
+		if (!sceneRef.current) return;
+
+		const earth = sceneRef.current.earth;
+		const { globeOpacity, landOpacity, lakesOpacity } = debugFloats;
+
+		earth.setGlobeOpacity(globeOpacity);
+		earth.setLandOpacity(landOpacity);
+		earth.setLakesOpacity(lakesOpacity);
+	}, [debugFloats]);
+
 	return (
 		<>
 			{/* Debug menu - conditionally rendered based on enableDebugMenu prop */}
@@ -129,6 +157,8 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 					<DebugMenu
 						debugOptions={debugOptions}
 						setDebugOptions={setDebugOptions}
+						debugFloats={debugFloats}
+						setDebugFloats={setDebugFloats}
 					/>
 				</div>
 			)}

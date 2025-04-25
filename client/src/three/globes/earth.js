@@ -1,3 +1,15 @@
+/**
+ * @fileoverview Earth class extends the base Globe class to provide a detailed representation of Earth
+ * with land masses, lakes, and debug visualization features. It handles loading and rendering
+ * of geographic data, managing visibility, and opacity control of various globe elements.
+ * @module Earth
+ * @requires ./globe
+ * @requires ../../api/geography
+ * @requires ../constants
+ * @requires ../geometry/globeGeoRenderers
+ * @requires three
+ * @requires ../helper/disposal.js
+ */
 import Globe from "./globe";
 import { fetchGeoJSON } from "../../api/geography";
 import { GEO_FEATURE } from "../constants";
@@ -5,134 +17,246 @@ import { generateGeoPolygonMeshes, generateShapeIndices } from "../geometry/glob
 import * as THREE from "three";
 import { disposeGroup } from "../helper/disposal.js";
 
+/**
+ * Extends the base Globe class to create a detailed Earth model with geographical features.
+ * Manages rendering of land masses, lakes, and provides debugging visualization tools.
+ * @class
+ * @extends Globe
+ */
 class Earth extends Globe {
-    constructor(scene) {
-        super();
+	/**
+	 * Creates a new Earth instance with geographical features.
+	 * @param {THREE.Scene} scene - The Three.js scene where the Earth will be rendered
+	 */
+	constructor(scene) {
+		super();
 
-        this.scene = scene;
-        this.landMeshes = new THREE.Group();
-        this.lakeMeshes = new THREE.Group();
-        this.landIndices = new THREE.Group();
-        this.lakeIndices = new THREE.Group();
-        this._init();
-    }
+		/**
+		 * The Three.js scene where the Earth is rendered
+		 * @type {THREE.Scene}
+		 */
+		this.scene = scene;
 
-    _init() {
-        this.scene.add(this.getGlobeMesh()); // add parent globe mesh to the scene
-        this._initLand();
-        this._initLakes();
-    }
+		/**
+		 * Group containing all land mass meshes
+		 * @type {THREE.Group}
+		 */
+		this.landMeshes = new THREE.Group();
 
-    _initLand() {
-        fetchGeoJSON('ne_110m_land').then(geojson => {
-            let landGroup = generateGeoPolygonMeshes(geojson, GEO_FEATURE.LAND);
-            landGroup.forEach(mesh => {
-                this.landMeshes.add(mesh);
-            });
+		/**
+		 * Group containing all lake meshes
+		 * @type {THREE.Group}
+		 */
+		this.lakeMeshes = new THREE.Group();
 
-            this.landMeshes.name = "LandGroup";
-            this.scene.add(this.landMeshes);
-        }).catch(error => {
-            console.error('Error processing GeoJSON:', error);
-        });
-    }
+		/**
+		 * Group containing debug indices for land vertices
+		 * @type {THREE.Group}
+		 */
+		this.landIndices = new THREE.Group();
 
-    _initLakes() {
-        fetchGeoJSON('ne_110m_lakes').then(geojson => {
-            let lakesGroup = generateGeoPolygonMeshes(geojson, GEO_FEATURE.LAKES);
-            lakesGroup.forEach(mesh => {
-                this.lakeMeshes.add(mesh);
-            });
+		/**
+		 * Group containing debug indices for lake vertices
+		 * @type {THREE.Group}
+		 */
+		this.lakeIndices = new THREE.Group();
 
-            this.lakeMeshes.name = "LakesGroup";
-            this.scene.add(this.lakeMeshes);
-        }).catch(error => {
-            console.error('Error processing GeoJSON:', error);
-        });
-    }
+		this._init();
+	}
 
-    _generateLandIndices() {
-        this.landMeshes.children.forEach(mesh => {
-            const indices = generateShapeIndices(mesh.geometry);
-            indices.forEach(index => {
-                this.landIndices.add(index);
-            });
-        });
+	/**
+	 * Initializes the Earth model with base globe, land masses, and lakes
+	 * @private
+	 */
+	_init() {
+		this.scene.add(this.getGlobeMesh()); // add parent globe mesh to the scene
+		this._initLand();
+		this._initLakes();
+	}
 
-        this.landIndices.name = "LandIndices";
-        this.landIndices.visible = false;
-        this.scene.add(this.landIndices);
-    }
+	/**
+	 * Loads and initializes land mass geometries from GeoJSON data
+	 * @private
+	 */
+	_initLand() {
+		fetchGeoJSON('ne_110m_land').then(geojson => {
+			let landGroup = generateGeoPolygonMeshes(geojson, GEO_FEATURE.LAND);
+			landGroup.forEach(mesh => {
+				this.landMeshes.add(mesh);
+			});
 
-    _generateLakeIndices() {
-        this.lakeIndices = new THREE.Group();
+			this.landMeshes.name = "LandGroup";
+			this.scene.add(this.landMeshes);
+		}).catch(error => {
+			console.error('Error processing GeoJSON:', error);
+		});
+	}
 
-        this.lakeMeshes.children.forEach(mesh => {
-            const indices = generateShapeIndices(mesh.geometry);
-            indices.forEach(index => {
-                this.lakeIndices.add(index);
-            });
-        });
+	/**
+	 * Loads and initializes lake geometries from GeoJSON data
+	 * @private
+	 */
+	_initLakes() {
+		fetchGeoJSON('ne_110m_lakes').then(geojson => {
+			let lakesGroup = generateGeoPolygonMeshes(geojson, GEO_FEATURE.LAKES);
+			lakesGroup.forEach(mesh => {
+				this.lakeMeshes.add(mesh);
+			});
 
-        this.lakeIndices.name = "LakeIndices";
-        this.lakeIndices.visible = false;
-        this.scene.add(this.lakeIndices);
-    }
+			this.lakeMeshes.name = "LakesGroup";
+			this.scene.add(this.lakeMeshes);
+		}).catch(error => {
+			console.error('Error processing GeoJSON:', error);
+		});
+	}
 
-    showLand() {
-        console.log(this.landMeshes);
-        this.landMeshes.visible = true;
-    }
+	/**
+	 * Generates debug visualization for land vertices
+	 * Creates sphere meshes at each vertex of land geometries
+	 * @private
+	 */
+	_generateLandIndices() {
+		this.landMeshes.children.forEach(mesh => {
+			const indices = generateShapeIndices(mesh.geometry);
+			indices.forEach(index => {
+				this.landIndices.add(index);
+			});
+		});
 
-    hideLand() {
-        this.landMeshes.visible = false;
-    }
+		this.landIndices.name = "LandIndices";
+		this.landIndices.visible = false;
+		this.scene.add(this.landIndices);
+	}
 
-    showLakes() {
-        this.lakeMeshes.visible = true;
-    }
+	/**
+	 * Generates debug visualization for lake vertices
+	 * Creates sphere meshes at each vertex of lake geometries
+	 * @private
+	 */
+	_generateLakeIndices() {
+		this.lakeIndices = new THREE.Group();
 
-    hideLakes() {
-        this.lakeMeshes.visible = false;
-    }
+		this.lakeMeshes.children.forEach(mesh => {
+			const indices = generateShapeIndices(mesh.geometry);
+			indices.forEach(index => {
+				this.lakeIndices.add(index);
+			});
+		});
 
-    showLandIndices() {
-        if (this.landIndices.children.length === 0) {
-            this._generateLandIndices();
-        }
+		this.lakeIndices.name = "LakeIndices";
+		this.lakeIndices.visible = false;
+		this.scene.add(this.lakeIndices);
+	}
 
-        this.landIndices.visible = true;
-    }
+	/**
+	 * Makes land masses visible
+	 */
+	showLand() {
+		this.landMeshes.visible = true;
+	}
 
-    hideLandIndices() {
-        this.landIndices.visible = false;
-    }
+	/**
+	 * Hides land masses
+	 */
+	hideLand() {
+		this.landMeshes.visible = false;
+	}
 
-    showLakeIndices() {
-        if (this.lakeIndices.children.length === 0) {
-            this._generateLakeIndices();
-        }
+	/**
+	 * Sets the opacity of all land meshes
+	 * @param {number} opacity - The opacity value (0.0-1.0)
+	 */
+	setLandOpacity(opacity) {
+		this.landMeshes.traverse((child) => {
+			if (child.isMesh) {
+				child.material.opacity = opacity;
+				child.material.transparent = true;
+			}
+		});
+	}
 
-        this.lakeIndices.visible = true;
-    }
+	/**
+	 * Makes lakes visible
+	 */
+	showLakes() {
+		this.lakeMeshes.visible = true;
+	}
 
-    hideLakeIndices() {
-        this.lakeIndices.visible = false;
-    }
+	/**
+	 * Hides lakes
+	 */
+	hideLakes() {
+		this.lakeMeshes.visible = false;
+	}
 
-    dispose() {
-        super.dispose(this.scene);
-    
-        disposeGroup(this.landMeshes);
-        disposeGroup(this.lakeMeshes);
-        disposeGroup(this.landIndices);
-        disposeGroup(this.lakeIndices);
-        
-        this.landMeshes = null;
-        this.lakeMeshes = null;
-        this.landIndices = null;
-        this.lakeIndices = null;
-    }
+	/**
+	 * Sets the opacity of all lake meshes
+	 * @param {number} opacity - The opacity value (0.0-1.0)
+	 */
+	setLakesOpacity(opacity) {
+		this.lakeMeshes.traverse((child) => {
+			if (child.isMesh) {
+				child.material.opacity = opacity;
+				child.material.transparent = true;
+			}
+		});
+	}
+
+	/**
+	 * Makes land vertex indices visible
+	 * Generates indices if they don't exist yet
+	 */
+	showLandIndices() {
+		if (this.landIndices.children.length === 0) {
+			this._generateLandIndices();
+		}
+
+		this.landIndices.visible = true;
+	}
+
+	/**
+	 * Hides land vertex indices
+	 */
+	hideLandIndices() {
+		this.landIndices.visible = false;
+	}
+
+	/**
+	 * Makes lake vertex indices visible
+	 * Generates indices if they don't exist yet
+	 */
+	showLakeIndices() {
+		if (this.lakeIndices.children.length === 0) {
+			this._generateLakeIndices();
+		}
+
+		this.lakeIndices.visible = true;
+	}
+
+	/**
+	 * Hides lake vertex indices
+	 */
+	hideLakeIndices() {
+		this.lakeIndices.visible = false;
+	}
+
+	/**
+	 * Disposes of all resources to prevent memory leaks
+	 * Calls the parent Globe's dispose method and cleans up all groups
+	 */
+	dispose() {
+		super.dispose(this.scene);
+	
+		disposeGroup(this.landMeshes);
+		disposeGroup(this.lakeMeshes);
+		disposeGroup(this.landIndices);
+		disposeGroup(this.lakeIndices);
+		
+		this.landMeshes = null;
+		this.lakeMeshes = null;
+		this.landIndices = null;
+		this.lakeIndices = null;
+	}
 }
 
 export default Earth;

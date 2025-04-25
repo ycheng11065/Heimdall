@@ -69,7 +69,6 @@ class Globe {
 	_createGlobeMesh() {
 		let mesh = new Mesh(this.geometry, this.material);
 		mesh.name = "Globe";
-		mesh.visible = true;
 		return mesh;
 	}
 
@@ -81,9 +80,7 @@ class Globe {
 	_createMaterial() {
 		const material = new MeshBasicMaterial({
 			color: GLOBE.COLOR,
-			wireframe: GLOBE.WIREFRAME,
-			transparent: GLOBE.TRANSPARENT,
-			opacity: GLOBE.OPACITY,
+			transparent: true,
 		});
 		return material;
 	}
@@ -100,6 +97,15 @@ class Globe {
 	 */
 	hideGlobe() {
 		this.globeMesh.visible = false;
+	}
+
+	/**
+	 * Sets the opacity of the globe and enables transparency.
+	 * A convenience method that sets both opacity and transparency in one call.
+	 * @param {number} opacity - The opacity value (0-1).
+	 */
+	setGlobeOpacity(opacity) {
+		this.material.opacity = opacity;
 	}
 
 	/**
@@ -122,14 +128,6 @@ class Globe {
 	 */
 	useSolid() {
 		this.material.wireframe = false;
-	}
-
-	/**
-	 * Sets the opacity of the globe material.
-	 * @param {number} opacity - The opacity value (0-1).
-	 */
-	setOpacity(opacity) {
-		this.material.opacity = opacity;
 	}
 
 	/**
