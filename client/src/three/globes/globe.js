@@ -2,15 +2,16 @@
  * @fileoverview Base Globe class providing core 3D sphere functionality.
  * @module Globe
  * @requires three
+ * @requires ../constants
+ * @requires ../helper/disposal
  */
-
 import { SphereGeometry, MeshBasicMaterial, Mesh } from 'three';
 import { GLOBE } from '../constants';
+import { disposeMaterial } from '../helper/disposal.js';
 
 /**
  * Base class for globe objects with configurable properties.
  * Handles the creation and management of a Three.js sphere mesh.
- * @class
  */
 class Globe {
 	/**
@@ -22,39 +23,34 @@ class Globe {
 		/**
 		 * The radius of the globe.
 		 * @type {number}
-		 * @private
 		 */
 		this.radius = radius;
-		
+
 		/**
 		 * The number of segments used for the sphere geometry.
 		 * @type {number}
-		 * @private
 		 */
 		this.segments = segments;
-		
+
 		/**
 		 * The material applied to the globe mesh.
 		 * @type {MeshBasicMaterial}
-		 * @private
 		 */
 		this.material = this._createMaterial();
-		
+
 		/**
 		 * The geometry of the globe.
 		 * @type {SphereGeometry}
-		 * @private
 		 */
 		this.geometry = this._createGeometry();
-		
+
 		/**
 		 * The 3D mesh representing the globe.
 		 * @type {Mesh}
-		 * @private
 		 */
-		this.mesh = this._createMesh();
+		this.globeMesh = this._createGlobeMesh();
 	}
-	
+
 	/**
 	 * Creates the sphere geometry for the globe.
 	 * @returns {SphereGeometry} The created sphere geometry.
@@ -64,17 +60,19 @@ class Globe {
 		const geometry = new SphereGeometry(this.radius, this.segments, this.segments);
 		return geometry;
 	}
-	
+
 	/**
 	 * Creates the mesh from the geometry and material.
 	 * @returns {Mesh} The created mesh.
 	 * @private
 	 */
-	_createMesh() {
-		const mesh = new Mesh(this.geometry, this.material);
+	_createGlobeMesh() {
+		let mesh = new Mesh(this.geometry, this.material);
+		mesh.name = "Globe";
+		mesh.visible = true;
 		return mesh;
 	}
-	
+
 	/**
 	 * Creates the material for the globe.
 	 * @returns {MeshBasicMaterial} The created material.
@@ -89,69 +87,97 @@ class Globe {
 		});
 		return material;
 	}
-	
+
+	/**
+	 * Makes the globe visible.
+	 */
+	showGlobe() {
+		this.globeMesh.visible = true;
+	}
+
+	/**
+	 * Hides the globe.
+	 */
+	hideGlobe() {
+		this.globeMesh.visible = false;
+	}
+
 	/**
 	 * Sets the color of the globe.
 	 * @param {string|number} color - The color to set (hex, RGB, or named color).
-	 * @public
 	 */
 	setColor(color) {
 		this.material.color.set(color);
 	}
-	
+
 	/**
-	 * Sets whether the globe should be rendered as wireframe.
-	 * @param {boolean} wireframe - True to show wireframe, false to show solid.
-	 * @public
+	 * Sets the globe to wireframe rendering mode.
 	 */
-	setWireframe(wireframe) {
-		this.material.wireframe = wireframe;
+	useWireframe() {
+		this.material.wireframe = true;
 	}
-	
+
+	/**
+	 * Sets the globe to solid rendering mode.
+	 */
+	useSolid() {
+		this.material.wireframe = false;
+	}
+
 	/**
 	 * Sets the opacity of the globe material.
 	 * @param {number} opacity - The opacity value (0-1).
-	 * @public
 	 */
 	setOpacity(opacity) {
 		this.material.opacity = opacity;
 	}
-	
+
 	/**
 	 * Sets whether the globe material should have transparency enabled.
 	 * @param {boolean} transparent - True to enable transparency, false to disable.
-	 * @public
 	 */
 	setTransparent(transparent) {
 		this.material.transparent = transparent;
 	}
-	
+
 	/**
 	 * Gets the mesh representing the globe.
 	 * @returns {Mesh} The globe mesh.
-	 * @public
 	 */
-	getMesh() {
-		return this.mesh;
+	getGlobeMesh() {
+		return this.globeMesh;
 	}
-	
+
 	/**
 	 * Gets the radius of the globe.
 	 * @returns {number} The globe radius.
-	 * @public
 	 */
 	getRadius() {
 		return this.radius;
 	}
-	
+
 	/**
 	 * Disposes of resources to prevent memory leaks.
 	 * Call this method when the globe is no longer needed.
-	 * @public
+	 * @param {THREE.Scene} [scene] - Optional scene to remove the globe mesh from
 	 */
-	dispose() {
-		this.geometry.dispose();
-		this.material.dispose();
+	dispose(scene) {
+		// remove from scene if provided
+		if (scene && this.globeMesh && this.globeMesh.parent === scene) {
+			scene.remove(this.globeMesh);
+		}
+		
+		if (this.geometry) {
+			this.geometry.dispose();
+			this.geometry = null;
+		}
+		
+		if (this.material) {
+			disposeMaterial(this.material);
+			this.material = null;
+		}
+		
+		this.globeMesh = null;
 	}
 }
 
