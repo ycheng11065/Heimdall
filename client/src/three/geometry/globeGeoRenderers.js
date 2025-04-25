@@ -1,106 +1,99 @@
+/**
+ * @fileoverview Utilities for generating 3D meshes from geographic data.
+ * Provides functions to convert GeoJSON features into Three.js meshes
+ * and create visual indices for debugging polygon vertices.
+ * @module geoPolygonUtils
+ * @requires three
+ * @requires ./utils.js
+ * @requires ../constants.js
+ */
 import * as UTILS from "./utils.js";
 import { GEO_FEATURE, GLOBE } from "../constants.js";
 import * as THREE from "three";
-import { renderShapeIndices } from "./renderHelpers.js";
-import { handle_polygon_feature_wasm } from "../../wasm/spherekit/pkg/spherekit.js";
 
-export const renderGeoLines = (data, scene, geoFeature) => {
-    const features = data.features;
-    
-    features.forEach(feature => {
-        if (feature.geometry.type === "LineString") {
-            const points = [];
-
-            feature.geometry.coordinates.forEach(coord => {
-                const [longitude, latitude] = coord;
-                const point = UTILS.llToVector3(latitude, longitude, GLOBE.RADIUS); // .001 to be slightly above globe
-                points.push(point);
-            });
-
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-            let colour;
-            switch (geoFeature) {
-                case GEO_FEATURE.COASTLINE:
-                    colour = 0xFFFFFF;
-                    break;
-                case GEO_FEATURE.RIVERS:
-                    colour = 0x0000FF;
-                    break;
-                default:
-                    colour = 0xFF0000;
-            }
-
-            const material = new THREE.LineBasicMaterial({ 
-                color: colour,
-                linewidth: 1
-            });
-
-            const line = new THREE.Line(geometry, material);
-            scene.add(line);
-        }
-    });
+/**
+ * Generates Three.js meshes from GeoJSON polygon features using stereographic projection.
+ * Creates colored meshes for different geographic features like land masses and lakes.
+ * 
+ * @param {Object} data - GeoJSON data containing features
+ * @param {GEO_FEATURE} geoFeature - Type of geographic feature (e.g., LAND, LAKES)
+ * @returns {Array<THREE.Mesh>} Array of Three.js meshes representing the geographic features
+ * 
+ * @example
+ * // Generate meshes for land masses
+ * const landMeshes = generateGeoPolygonMeshes(landData, GEO_FEATURE.LAND);
+ * 
+ * @example
+ * // Generate meshes for lakes
+ * const lakeMeshes = generateGeoPolygonMeshes(lakeData, GEO_FEATURE.LAKES);
+ */
+export const generateGeoPolygonMeshes = (data, geoFeature) => {
+	const features = data.features;
+	let meshes = [];
+	
+	features.forEach(feature => {
+		if (feature.geometry.type === "Polygon") {
+			const shape = UTILS.generateSphericalPolygonGeometry(feature);
+			let color = 0xFFFFFF;
+			let name = "Unknown";
+			let opacity = 1.0;
+			
+			switch (geoFeature) {
+				case GEO_FEATURE.LAKES:
+					color = 0x00FFFF;
+					name = "Lake";
+					break;
+				case GEO_FEATURE.LAND:
+					color = 0x00FF00;
+					name = "Land";
+					break;
+			}
+			
+			const material = new THREE.MeshBasicMaterial({
+				color: color,
+				transparent: true,
+				opacity: opacity,
+				side: THREE.DoubleSide
+			});
+			
+			const mesh = new THREE.Mesh(shape, material);
+			mesh.name = name;
+			meshes.push(mesh);
+		}
+	});
+	
+	return meshes;
 }
 
-// Improved rendering for continent-sized polygons using stereographic projection
-export const renderGeoPolygons = (data, scene, geoFeature, showIndices = false) => {
-    const features = data.features;
-
-    features.forEach(feature => {
-        if (feature.geometry.type === "Polygon") {
-            let mesh_results = handle_polygon_feature_wasm(JSON.stringify(feature));
-
-            // Create a triangulated spherical polygon using the Red Blob Games approach
-            const shape = createSphericalPolygon(mesh_results);
-            
-            let color;
-            switch (geoFeature) {
-                case GEO_FEATURE.OCEANS:
-                    color = 0x0077be; // Deeper blue for oceans
-                break;
-                case GEO_FEATURE.LAKES:
-                    color = 0x00FFFF;
-                break;
-                case GEO_FEATURE.LAND:
-                    color = 0x00FF00;
-                break;
-                default:
-                    color = 0xFFFFFF;
-            }
-
-            const material = new THREE.MeshBasicMaterial({
-                color: color,
-                transparent: true,
-                opacity: 0.8,
-                side: THREE.DoubleSide
-            });
-
-            const mesh = new THREE.Mesh(shape, material);
-            scene.add(mesh);
-
-            // Draw red dots at each coordinate point if showIndices is true
-            if (showIndices) {
-                renderShapeIndices(shape, scene);
-            }
-        }
-    });
-};
-  
-// Create a properly triangulated spherical polygon using the Red Blob Games approach
-function createSphericalPolygon(mesh_results) {
-    let coordinates = mesh_results.vertices;
-    const scaledPositions = new Float32Array(coordinates.length * 3);
-
-    for (let i = 0; i < coordinates.length; i++) {
-        const vector = coordinates[i];
-        scaledPositions[i * 3] = vector[0] * GLOBE.Z_CORRECTED_RADIUS;
-        scaledPositions[i * 3 + 1] = vector[2] * GLOBE.Z_CORRECTED_RADIUS;
-        scaledPositions[i * 3 + 2] = -vector[1] * GLOBE.Z_CORRECTED_RADIUS;
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(scaledPositions, 3));
-    geometry.setIndex(mesh_results.triangles);
-
-    return geometry;
+/**
+ * Generates small sphere meshes at each vertex of a given geometry.
+ * Useful for debugging polygon shapes and visualizing vertex positions.
+ * 
+ * @param {THREE.BufferGeometry} shape - The geometry to generate indices for
+ * @returns {Array<THREE.Mesh>} Array of small sphere meshes positioned at each vertex
+ * 
+ * @example
+ * // Generate visual indices for a land polygon
+ * const landPolygon = UTILS.generateSphericalPolygonGeometry(feature);
+ * const indices = generateShapeIndices(landPolygon);
+ * // Add indices to scene for debugging
+ * indices.forEach(index => scene.add(index));
+ */
+export const generateShapeIndices = (shape) => {
+	const vertices = shape.attributes.position.array;
+	const dotMaterial = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+	let indices = [];
+	
+	for (let i = 0; i < vertices.length; i += 3) {
+		const x = vertices[i];
+		const y = vertices[i + 1];
+		const z = vertices[i + 2];
+		
+		const dotGeometry = new THREE.SphereGeometry(GLOBE.RADIUS * 0.003, 8, 8);
+		const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+		dot.position.set(x, y, z);
+		indices.push(dot);
+	}
+	
+	return indices;
 }

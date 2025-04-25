@@ -1,6 +1,9 @@
-import { Vector3, Quaternion, Matrix4 } from 'three';
-import Delaunator from 'delaunator';
+import { Vector3 } from 'three';
 import { GLOBE } from '../constants.js';
+import { generate_polygon_feature_mesh_wasm } from '../../wasm/spherekit/pkg/spherekit.js';
+import * as THREE from 'three';
+
+
 /**
  * Converts latitude and longitude coordinates to a 3D vector position on a sphere.
  * 
@@ -25,142 +28,48 @@ export const llToVector3 = (lon, lat, radius) => {
     return new Vector3(x, y, z);
 }
 
-export const vector3ToLL = (vector, radius = GLOBE.RADIUS) => {
-    const x = vector.x;
-    const y = vector.y;
-    const z = vector.z;
-    
-    const lat = 90 - (Math.acos(y / radius) * (180 / Math.PI));
-    
-    let lon = (Math.atan2(z, -x) * (180 / Math.PI)) - 180;
-    
-    if (lon < -180) lon += 360;
-    if (lon > 180) lon -= 360;
-    
-    return [ lon, lat ];
-};
-
-export const generateFibonacciSpherePoints = (samples = 2000, radius = GLOBE.RADIUS) => {
-    const points = [];
-    const phi = Math.PI * (3 - Math.sqrt(5));
-
-    for (let i = 0; i < samples; i++) {
-        const y = 1 - (i / (samples - 1)) * 2;
-        const radiusAtY = Math.sqrt(1 - y * y);
-
-        const theta = phi * i;
-
-        const x = Math.cos(theta) * radiusAtY;
-        const z = Math.sin(theta) * radiusAtY;
-
-        points.push(new Vector3(x * radius, y * radius, z * radius));
+/**
+ * Creates a Three.js BufferGeometry for a spherical polygon from GeoJSON feature data.
+ * 
+ * This function uses WebAssembly to generate mesh data for a spherical polygon representation
+ * of geographic features. It converts the generated vertices to the correct coordinate system
+ * and scale for globe rendering.
+ * 
+ * The WASM module must be initialized before calling this function.
+ * 
+ * @param {Object} feature - A GeoJSON feature object containing polygon geometry
+ * @returns {THREE.BufferGeometry} A Three.js geometry representing the spherical polygon
+ * @throws {Error} If the WASM module is not initialized or if polygon generation fails
+ * 
+ * @example
+ * // After WASM initialization
+ * const landFeature = geojson.features[0];
+ * const geometry = getSphericalPolygonGeometry(landFeature);
+ * const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+ * const mesh = new THREE.Mesh(geometry, material);
+ * scene.add(mesh);
+ */
+export const generateSphericalPolygonGeometry = (feature) => {
+    if (typeof generate_polygon_feature_mesh_wasm !== 'function') {
+        console.error('WASM module not initialized. Call initWasm() first.');
+        return new THREE.BufferGeometry(); 
     }
 
-    return points;
-}
+    let meshResults = generate_polygon_feature_mesh_wasm(JSON.stringify(feature));
 
-export const getCentroid = (points) => {
-    let sumX = 0, sumY = 0, sumZ = 0;
-    const numPoints = points.length / 3;
+    let coordinates = meshResults.vertices;
+    const scaledPositions = new Float32Array(coordinates.length * 3);
 
-    for (let i = 0; i < numPoints; i++) {
-        sumX += points[i * 3];
-        sumY += points[i * 3 + 1];
-        sumZ += points[i * 3 + 2];
+    for (let i = 0; i < coordinates.length; i++) {
+        const vector = coordinates[i];
+        scaledPositions[i * 3] = vector[0] * GLOBE.Z_CORRECTED_RADIUS;
+        scaledPositions[i * 3 + 1] = vector[2] * GLOBE.Z_CORRECTED_RADIUS;
+        scaledPositions[i * 3 + 2] = -vector[1] * GLOBE.Z_CORRECTED_RADIUS;
     }
 
-    return [sumX / numPoints, sumY / numPoints, sumZ / numPoints];
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(scaledPositions, 3));
+    geometry.setIndex(meshResults.triangles);
+
+    return geometry;
 }
-
-export const findOppositePoint = (points) => {
-    let sumX = 0, sumY = 0, sumZ = 0;
-    const numPoints = points.length / 3;
-
-    for (let i = 0; i < numPoints; i++) {
-        sumX += points[i * 3];
-        sumY += points[i * 3 + 1];
-        sumZ += points[i * 3 + 2];
-    }
-
-    const avgX = sumX / numPoints;
-    const avgY = sumY / numPoints;
-    const avgZ = sumZ / numPoints;
-
-    const length = Math.sqrt(avgX * avgX + avgY * avgY + avgZ * avgZ);
-
-    return {
-        x: -avgX / length,
-        y: -avgY / length,
-        z: -avgZ / length
-    };
-}
-
-export const rotatePointsForProjection = (points, oppositePoint) => {
-    const fromVector = new Vector3(
-        oppositePoint.x, 
-        oppositePoint.y, 
-        oppositePoint.z
-    );
-    
-    const toVector = new Vector3(0, 0, -1);
-    
-    const quaternion = new Quaternion();
-    quaternion.setFromUnitVectors(fromVector.normalize(), toVector);
-    
-    const rotationMatrix = new Matrix4();
-    rotationMatrix.makeRotationFromQuaternion(quaternion);
-    
-    const numPoints = points.length / 3;
-    const rotatedPoints = new Float32Array(points.length);
-    
-    for (let i = 0; i < numPoints; i++) {
-        const point = new Vector3(
-            points[i * 3],
-            points[i * 3 + 1],
-            points[i * 3 + 2]
-        );
-      
-        point.applyMatrix4(rotationMatrix);
-        
-        rotatedPoints[i * 3] = point.x;
-        rotatedPoints[i * 3 + 1] = point.y;
-        rotatedPoints[i * 3 + 2] = point.z;
-    }
-    
-    return rotatedPoints;
-}
-
-export const stereographicProjection = (points) => {
-    const numPoints = points.length / 3;
-    const projectedPoints = [];
-
-    for (let i = 0; i < numPoints; i++) {
-        const x = points[i * 3];
-        const y = points[i * 3 + 1];
-        const z = points[i * 3 + 2];
-        
-        const scale = 1 / (1 + z);
-        projectedPoints.push(x * scale, y * scale);
-    }
-
-    return projectedPoints;
-}
-
-export const triangulate2DPoints = (points2D) => {
-    const delaunatorPoints = [];
-    const numPoints = points2D.length / 2;
-    
-    for (let i = 0; i < numPoints; i++) {
-      delaunatorPoints.push([
-        points2D[i * 2],     // x coordinate
-        points2D[i * 2 + 1]  // y coordinate
-      ]);
-    }
-    
-    const delaunay = new Delaunator(delaunatorPoints.flat());
-    
-    const indices = Array.from(delaunay.triangles);
-    
-    return { indices, delaunay };
-}
-

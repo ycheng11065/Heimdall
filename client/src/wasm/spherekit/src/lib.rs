@@ -9,15 +9,15 @@ pub use geometry::{
     rotate_points_to_south_pole
 };
 pub use fibonnaci::fibonacci_sphere;
-pub use polygon::{get_mesh_points, handle_polygon_feature, DEFAULT_FIBONACCI_POINT_COUNT, PolygonMeshData};
+pub use polygon::{get_mesh_points, generate_polygon_feature_mesh, DEFAULT_FIBONACCI_POINT_COUNT, PolygonMeshData};
 pub use errors::SphereKitError;
 
 use wasm_bindgen::prelude::*;
 use js_sys;
 
 #[wasm_bindgen]
-pub fn handle_polygon_feature_wasm(geojson_feature: &str) -> Result<JsValue, JsValue> {
-    let result: PolygonMeshData = handle_polygon_feature(geojson_feature)
+pub fn generate_polygon_feature_mesh_wasm(geojson_feature: &str) -> Result<JsValue, JsValue> {
+    let result: PolygonMeshData = generate_polygon_feature_mesh(geojson_feature)
         .map_err(|err| JsValue::from_str(&err))?;
     
     let vertices_array: js_sys::Array = js_sys::Array::new();

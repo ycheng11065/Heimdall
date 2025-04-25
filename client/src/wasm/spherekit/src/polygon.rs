@@ -50,7 +50,7 @@ pub struct PolygonMeshData {
 /*********************************/
 
 
-pub fn handle_polygon_feature(geojson_feature: &str) -> Result<PolygonMeshData, String> {
+pub fn generate_polygon_feature_mesh(geojson_feature: &str) -> Result<PolygonMeshData, String> {
 
     let geojson: GeoJson = geojson_feature.parse::<GeoJson>()
         .map_err(|err| format!("Failed to parse GeoJSON: {}", err))?;
@@ -156,7 +156,7 @@ pub fn handle_polygon_feature(geojson_feature: &str) -> Result<PolygonMeshData, 
 /// # Note
 ///
 /// The function requires at least 3 points in the outer ring to form a valid polygon.
-/// It uses a Fibonacci sphere distribution to generate approximately 2000 evenly distributed
+/// It uses a Fibonacci sphere distribution to generate a constant number of points evenly distributed
 /// points, then filters to keep only those inside the polygon boundary.
 pub fn get_mesh_points(outer_ring: &Vec<(f64, f64)>) -> Result<Vec<(f64, f64, f64)>, SphereKitError> {
     if outer_ring.is_empty() {

@@ -14,7 +14,6 @@ export const CAMERA = {
     }
 };
 
-
 export const GEO_FEATURE = {
     COASTLINE: 1,
     RIVERS: 2,
@@ -25,6 +24,7 @@ export const GEO_FEATURE = {
 
 export const GLOBE = {
     RADIUS: 10,
-    Z_CORRECTED_RADIUS: 10.01, // .01 to be slightly above globe
-    SEGMENTS: 64
+    Z_CORRECTED_RADIUS: 10.01, // .01 to be slightly above globe. Used for other objects than the globe
+    SEGMENTS: 64,
+    COLOR: 0x14b1d9,
 };
