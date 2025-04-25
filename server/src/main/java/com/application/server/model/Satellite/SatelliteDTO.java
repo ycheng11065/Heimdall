@@ -9,7 +9,6 @@ public record SatelliteDTO(
         String countryCode,
         LocalDate launchDate,
         LocalDate decayDate,
-        LocalDateTime lastUpdate,
-        String tleLine1,
+        LocalDateTime         String tleLine1,
         String tleLine2
 ) {}
