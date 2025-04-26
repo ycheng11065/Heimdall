@@ -105,13 +105,13 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				sceneRef.current = globeSceneManager;
 				sceneRef.current.startAnimationLoop();
 
-				const satelliteDTOs = await fetchSatellitesByType("starlink");
+				const satelliteDTOs = await fetchSatellitesByType("oneweb");
 
 				for (const sat of satelliteDTOs) {
 					console.log(sat.tleLine1);
 
 					const now = Date.now();
-					const epoch = Date.parse(sat.epoch); // ISO 8601 from backend
+					const epoch = Date.parse(sat.epoch); 
 
 					const minutesSinceEpoch = (now - epoch) / 1000 / 60;
 
