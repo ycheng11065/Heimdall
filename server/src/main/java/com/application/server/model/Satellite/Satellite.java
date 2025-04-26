@@ -2,8 +2,8 @@ package com.application.server.model.Satellite;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public class Satellite {
     @JsonProperty("NORAD_CAT_ID")
@@ -25,7 +25,7 @@ public class Satellite {
     private LocalDate decayDate;
 
     @JsonProperty("EPOCH")
-    private LocalDateTime epoch;
+    private String epoch;
 
     @JsonProperty("TLE_LINE1")
     private String tleLine1;
@@ -75,8 +75,8 @@ public class Satellite {
         return decayDate;
     }
 
-    public LocalDateTime getEpoch() {
-        return epoch;
+    public Instant getEpoch() {
+        return Instant.parse(epoch + "Z");
     }
 
     public String getTleLine1() {

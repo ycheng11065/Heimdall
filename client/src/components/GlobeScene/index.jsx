@@ -9,6 +9,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { setupGlobeScene } from '../../three/globeSceneCore.js';
 import DebugMenu from '../DebugMenu/index.jsx';
+import { fetchSatellitesByType } from '../../api/satellite.js';
+import { compute_satellite_orbit } from '../../wasm/spherekit/pkg/spherekit.js';
 
 /**
  * A React component that renders a Three.js scene with a 3D globe.
@@ -98,9 +100,29 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		handleResize();
 		
 		if (!sceneRef.current) {
-			setupGlobeScene(canvasRef.current).then((globeSceneManager) => {
+			setupGlobeScene(canvasRef.current).then(async (globeSceneManager) => {
 				sceneRef.current = globeSceneManager;
 				sceneRef.current.startAnimationLoop();
+
+				// const satelliteDTOs = await fetchSatellitesByType("starlink");
+
+				// for (const sat of satelliteDTOs) {
+				// 	console.log(sat.tleLine1);
+
+				// 	const now = Date.now();
+				// 	const epoch = Date.parse(sat.epoch); // ISO 8601 from backend
+
+				// 	const minutesSinceEpoch = (now - epoch) / 1000 / 60;
+
+				// 	const orbitResult = await compute_satellite_orbit(
+				// 		sat.tleLine1,
+				// 		sat.tleLine2,
+				// 		minutesSinceEpoch
+				// 	);
+
+				// 	const satelliteMesh = createSatelliteMesh(orbitResult.position);
+    			// 	globeSceneManager.scene.add(satelliteMesh);
+				// }
 			});
 		}
 		

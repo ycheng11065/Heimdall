@@ -65,48 +65,46 @@ public class EarthquakeService {
     public Flux<EarthquakeEntity> syncEarthquakeData() {
         return fetchRecentEarthquakes()
                 .flatMap(this::UpdateEarthquakeDatabase)
-                .doOnNext(updated -> System.out.println("Processed: earthquake ID " + updated.getEarthquakeId()))
+                .doOnNext(updated -> System.out.println("Processed: earthquake ID " + updated.getPreferred_event_id()))
                 .doOnError(err -> System.err.println("Process error: " + err.getMessage()))
                 .doOnComplete(() -> System.out.println("Earthquake update protocol complete!"));
     }
 
     private void UpdateEarthquakeData(EarthquakeEntity existing, Earthquake updated) {
-        existing.setMag(updated.getProperties().getMag());
-        existing.setCdi(updated.getProperties().getCdi());
-        existing.setMmi(updated.getProperties().getMmi());
-        existing.setAlert(updated.getProperties().getAlert());
-        existing.setStatus(updated.getProperties().getStatus());
-        existing.setSignificance(updated.getProperties().getSignificance());
-        existing.setNst(updated.getProperties().getNst());
-        existing.setDmin(updated.getProperties().getDmin());
-        existing.setType(updated.getProperties().getType());
-        existing.setDepth(updated.getGeometry().getDepth());
-        existing.setAllKnownIds(updated.getProperties().getIds());
-        existing.setLastUpdate(LocalDateTime.now());
+        existing.setMagnitude(updated.getProperties().getMag());
+        existing.setCommunity_intensity_cdi(updated.getProperties().getCdi());
+        existing.setMercalli_intensity_mmi(updated.getProperties().getMmi());
+        existing.setUsgs_alert_level(updated.getProperties().getAlert());
+        existing.setProcessing_status(updated.getProperties().getStatus());
+        existing.setEvent_significance(updated.getProperties().getSignificance());
+        existing.setStation_count(updated.getProperties().getNst());
+        existing.setMin_station_distance_deg(updated.getProperties().getDmin());
+        existing.setEvent_type(updated.getProperties().getType());
+        existing.setDepth_km(updated.getGeometry().getDepth());
+        existing.setKnown_event_ids(updated.getProperties().getIds());
+        existing.setLastUpdated(Instant.now());
 
         // Process usgs update time to local time
-        LocalDateTime localUpdated = Instant.ofEpochMilli(updated.getProperties().getUpdated())
-                .atZone(ZoneId.systemDefault()) // Use computer/server’s zone
-                .toLocalDateTime();
-        existing.setUpdated(localUpdated);
+        Instant updateInstant = Instant.ofEpochMilli(updated.getProperties().getUpdated());
+        existing.setUsgs_update_time(updateInstant);
 
         // Rarely change but safe precaution
-        existing.setPlace(updated.getProperties().getPlace());
-        existing.setTz(updated.getProperties().getTz());
-        existing.setLongitude(updated.getGeometry().getLongitude());
-        existing.setLatitude(updated.getGeometry().getLatitude());
-        existing.setTsunami(updated.getProperties().getTsunami());
+        existing.setLocation_description(updated.getProperties().getPlace());
+        existing.setTimezone_offset_minutes(updated.getProperties().getTz());
+        existing.setEpicenter_longitude(updated.getGeometry().getLongitude());
+        existing.setEpicenter_latitude(updated.getGeometry().getLatitude());
+        existing.setTsunami_potential(updated.getProperties().getTsunami());
     }
 
     public Mono<EarthquakeEntity> UpdateEarthquakeDatabase(Earthquake updatedEarthquake) {
         return earthquakeRepository.findByEarthquakeId(updatedEarthquake.getEarthquakeId())
                 .flatMap(existing -> {
                     boolean updateTimeChanged = !existing
-                            .getUpdated()
-                            .equals(updatedEarthquake.getProperties().getUpdated());
+                            .getUsgs_update_time()
+                            .equals(Instant.ofEpochMilli(updatedEarthquake.getProperties().getUpdated()));
 
                     if (!updateTimeChanged) {
-                        System.out.println("Earthquake " + existing.getEarthquakeId() + " does not require update!");
+                        System.out.println("Earthquake " + existing.getPreferred_event_id() + " does not require update!");
                         return Mono.just(existing); // nothing to update
                     }
 
@@ -123,8 +121,8 @@ public class EarthquakeService {
                                     .next()
                                     .flatMap(existing -> {
                                         System.out.println("Earthquake changed ID to " + updatedEarthquake.getEarthquakeId() + "!");
-                                        existing.setEarthquakeId(updatedEarthquake.getEarthquakeId());
-                                        existing.setAllKnownIds(updatedEarthquake.getProperties().getIds());
+                                        existing.setPreferred_event_id(updatedEarthquake.getEarthquakeId());
+                                        existing.setKnown_event_ids(updatedEarthquake.getProperties().getIds());
                                         UpdateEarthquakeData(existing, updatedEarthquake);
                                         return earthquakeRepository.save(existing); // write to DB
                                     })

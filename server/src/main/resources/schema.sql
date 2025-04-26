@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS satellites (
     country_code VARCHAR(10),
     launch_date DATE,
     decay_date DATE,
-    last_update TIMESTAMP,
-    epoch TIMESTAMP,
+    last_updated TIMESTAMPTZ,
+    epoch TIMESTAMPTZ,
     tle_line1 TEXT,
     tle_line2 TEXT,
     inclination DOUBLE PRECISION,
@@ -24,8 +24,8 @@ CREATE TABLE IF NOT EXISTS earthquakes (
    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
    magnitude DOUBLE PRECISION,
    location_description VARCHAR(255),
-   event_time TIMESTAMP,
-   usgs_update_time TIMESTAMP,
+   event_time TIMESTAMPTZ,
+   usgs_update_time TIMESTAMPTZ,
    timezone_offset_minutes INT,
    community_intensity_cdi DOUBLE PRECISION,
    mercalli_intensity_mmi DOUBLE PRECISION,
@@ -41,5 +41,5 @@ CREATE TABLE IF NOT EXISTS earthquakes (
    depth_km DOUBLE PRECISION,
    known_event_ids TEXT,
    preferred_event_id VARCHAR(50) UNIQUE,
-   last_updated TIMESTAMP
+   last_updated TIMESTAMPTZ
 );

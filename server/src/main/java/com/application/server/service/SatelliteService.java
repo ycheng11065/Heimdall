@@ -13,7 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import org.springframework.http.HttpHeaders;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -152,7 +152,8 @@ public class SatelliteService {
                 entity.getCountryCode(),
                 entity.getLaunchDate(),
                 entity.getDecayDate(),
-                entity.getLastUpdate(),
+                entity.getLastUpdated(),
+                entity.getEpoch(),
                 entity.getTleLine1(),
                 entity.getTleLine2()
         ));
@@ -228,7 +229,7 @@ public class SatelliteService {
                     existing.setApoapsis(updatedSatellite.getApoapsis());
                     existing.setPeriapsis(updatedSatellite.getPeriapsis());
                     existing.setSemimajorAxis(updatedSatellite.getSemimajorAxis());
-                    existing.setLastUpdate(LocalDateTime.now());
+                    existing.setLastUpdated(Instant.now());
 
                     return satelliteRepository.save(existing); // write to DB
                 })
@@ -236,7 +237,6 @@ public class SatelliteService {
                         Mono.defer(() -> {
                             System.out.println("New satellite " + updatedSatellite.getNoradCatId() + " discovered!");
                             SatelliteEntity newEntity = SatelliteMapper.toEntity(updatedSatellite);
-                            newEntity.setLastUpdate(LocalDateTime.now());
                             return satelliteRepository.save(newEntity);
                         }));
     }
