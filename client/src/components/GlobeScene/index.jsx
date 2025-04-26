@@ -11,6 +11,7 @@ import { setupGlobeScene } from '../../three/globeSceneCore.js';
 import DebugMenu from '../DebugMenu/index.jsx';
 import { fetchSatellitesByType } from '../../api/satellite.js';
 import { compute_satellite_orbit } from '../../wasm/spherekit/pkg/spherekit.js';
+import { createSatelliteMesh } from '../../three/geometry/createSatelliteMesh.js';
 
 /**
  * A React component that renders a Three.js scene with a 3D globe.
@@ -104,25 +105,25 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				sceneRef.current = globeSceneManager;
 				sceneRef.current.startAnimationLoop();
 
-				// const satelliteDTOs = await fetchSatellitesByType("starlink");
+				const satelliteDTOs = await fetchSatellitesByType("starlink");
 
-				// for (const sat of satelliteDTOs) {
-				// 	console.log(sat.tleLine1);
+				for (const sat of satelliteDTOs) {
+					console.log(sat.tleLine1);
 
-				// 	const now = Date.now();
-				// 	const epoch = Date.parse(sat.epoch); // ISO 8601 from backend
+					const now = Date.now();
+					const epoch = Date.parse(sat.epoch); // ISO 8601 from backend
 
-				// 	const minutesSinceEpoch = (now - epoch) / 1000 / 60;
+					const minutesSinceEpoch = (now - epoch) / 1000 / 60;
 
-				// 	const orbitResult = await compute_satellite_orbit(
-				// 		sat.tleLine1,
-				// 		sat.tleLine2,
-				// 		minutesSinceEpoch
-				// 	);
+					const orbitResult = await compute_satellite_orbit(
+						sat.tleLine1,
+						sat.tleLine2,
+						minutesSinceEpoch
+					);
 
-				// 	const satelliteMesh = createSatelliteMesh(orbitResult.position);
-    			// 	globeSceneManager.scene.add(satelliteMesh);
-				// }
+					const satelliteMesh = createSatelliteMesh(orbitResult.position);
+    				globeSceneManager.scene.add(satelliteMesh);
+				}
 			});
 		}
 		

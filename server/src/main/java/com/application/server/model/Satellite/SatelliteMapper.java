@@ -22,7 +22,6 @@ public class SatelliteMapper {
         entity.setApoapsis(satellite.getApoapsis());
         entity.setPeriapsis(satellite.getPeriapsis());
         entity.setSemimajorAxis(satellite.getSemimajorAxis());
-
         entity.setEpoch(satellite.getEpoch());
 
         return entity;

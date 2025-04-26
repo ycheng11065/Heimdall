@@ -37,7 +37,7 @@ public class SatelliteEntity {
     @Column("epoch")
     private Instant epoch; // Timestamp of the TLE data epoch (reference time for orbit)
 
-    @Column("last_update")
+    @Column("last_updated")
     private Instant lastUpdated; // Timestamp of the last update in the local database
 
     @Column("tle_line1")
