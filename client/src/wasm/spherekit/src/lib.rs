@@ -66,7 +66,7 @@ pub fn compute_satellite_orbit(tle1: &str, tle2: &str, timestamp: f64) -> Result
 }
 
 #[wasm_bindgen]
-pub fn generate_orbit_path(tle_line1: &str, tle_line2: &str, minutes_ahead: f64, sample_interval: f64) -> Result<JsValue, JsValue> {
+pub fn generate_orbit_path(tle_line1: &str, tle_line2: &str, minutes_ahead: f64, sample_interval: f64, timestamp: f64) -> Result<JsValue, JsValue> {
     let elements = Elements::from_tle(None, tle_line1.as_bytes(), tle_line2.as_bytes())
         .map_err(|e| JsValue::from_str(&format!("TLE parse error: {}", e)))?;
 
@@ -78,7 +78,7 @@ pub fn generate_orbit_path(tle_line1: &str, tle_line2: &str, minutes_ahead: f64,
     let num_samples = (minutes_ahead / sample_interval) as usize;
 
     for i in 0..num_samples {
-        let minutes_since_epoch = i as f64 * sample_interval;
+        let minutes_since_epoch = timestamp + (i as f64 * sample_interval) * 10.0;
         if let Ok(prediction) = constants.propagate(sgp4::MinutesSinceEpoch(minutes_since_epoch)) {
             let pos = prediction.position;
 

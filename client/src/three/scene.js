@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import GlobeCamera from './camera.js';
 import Earth from './globes/earth.js';
+import SatelliteManager from '../visualizations/satellites/satelliteManager.js';
 
 /**
  * Manages the 3D scene containing an Earth globe, handling rendering,
@@ -60,6 +61,9 @@ class GlobeSceneManager {
 		this._onWindowResize = this._onWindowResize.bind(this);
 		this._render = this._render.bind(this);
 
+		this.satelliteManager = null;  // <-- add this
+        this.updateCallbacks = [];
+
 		this._init();
 	}
 
@@ -80,7 +84,13 @@ class GlobeSceneManager {
 		this.scene = new THREE.Scene();
 		this.camera = new GlobeCamera(this.renderer, this.canvas);
 		this.earth = new Earth(this.scene);
+
+		this.satelliteManager = new SatelliteManager(this.scene);
 	}
+
+	addUpdateCallback(cb) {
+        this.updateCallbacks.push(cb);
+    }
 
 	/**
 	 * Renders the scene and updates the camera.
@@ -88,9 +98,12 @@ class GlobeSceneManager {
 	 * @private
 	 */
 	_render() {
+		for (const cb of this.updateCallbacks) {
+            cb();
+        }
 		this.renderer.render(this.scene, this.camera);
-		this.camera.update();
-		this.animationFrameId = requestAnimationFrame(this._render);
+        this.camera.update();
+        this.animationFrameId = requestAnimationFrame(this._render);
 	}
 
 	/**

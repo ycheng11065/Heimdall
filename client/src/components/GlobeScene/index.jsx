@@ -10,8 +10,8 @@ import { useEffect, useRef, useState } from 'react';
 import { setupGlobeScene } from '../../three/globeSceneCore.js';
 import DebugMenu from '../DebugMenu/index.jsx';
 import { fetchSatellitesByType } from '../../api/satellite.js';
-import { compute_satellite_orbit } from '../../wasm/spherekit/pkg/spherekit.js';
-import { createSatelliteMesh } from '../../three/geometry/createSatelliteMesh.js';
+// import { updateSatellites } from '../../visualizations/satellites/satelliteManager.js';
+import SpeedControl from './speedControl.jsx';
 
 /**
  * A React component that renders a Three.js scene with a 3D globe.
@@ -33,6 +33,8 @@ import { createSatelliteMesh } from '../../three/geometry/createSatelliteMesh.js
  * @returns {JSX.Element} A canvas element where the Three.js scene is rendered, optionally with a debug menu
  */
 const GlobeScene = ({ enableDebugMenu = false }) => {
+	const [sceneReady, setSceneReady] = useState(false);
+
 	/**
 	 * Reference to the canvas DOM element where Three.js renders
 	 * @type {React.RefObject<HTMLCanvasElement>}
@@ -108,22 +110,15 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				const satelliteDTOs = await fetchSatellitesByType("oneweb");
 
 				for (const sat of satelliteDTOs) {
-					console.log(sat.tleLine1);
-
-					const now = Date.now();
-					const epoch = Date.parse(sat.epoch); 
-
-					const minutesSinceEpoch = (now - epoch) / 1000 / 60;
-
-					const orbitResult = await compute_satellite_orbit(
-						sat.tleLine1,
-						sat.tleLine2,
-						minutesSinceEpoch
-					);
-
-					const satelliteMesh = createSatelliteMesh(orbitResult.position);
-    				globeSceneManager.scene.add(satelliteMesh);
+					await sceneRef.current.satelliteManager.addSatellite(sat);
 				}
+	
+				// ⬇️ ALSO make them update every frame
+				sceneRef.current.addUpdateCallback(() => {
+					sceneRef.current.satelliteManager.updateSatellites();
+				});
+
+				setSceneReady(true);
 			});
 		}
 		
@@ -192,6 +187,17 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				height: '100%',
 				display: 'block'
 			}} />
+			
+			{sceneReady && sceneRef.current?.satelliteManager && (
+				<div style={{
+					position: 'absolute',
+					top: '16px',
+					right: '16px',
+					zIndex: 10
+				}}>
+					<SpeedControl satelliteManager={sceneRef.current.satelliteManager} />
+				</div>
+			)}
 		</>
 	);
 }
