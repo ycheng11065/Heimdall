@@ -13,7 +13,7 @@ const SpeedControl = ({ satelliteManager }) => {
             satelliteManager.clock.previousRealTimeMs = Date.now();
         }
     
-        satelliteManager.setSpeed(newSpeed); // 👈 update SatelliteManager clock
+        satelliteManager.setSpeed(newSpeed);
     };
 
     return (

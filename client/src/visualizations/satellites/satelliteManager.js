@@ -12,7 +12,6 @@ class SatelliteManager {
     }
 
     async addSatellite(satelliteDTO) {
-        console.log("adding");
         const now = Date.now();
         const epoch = Date.parse(satelliteDTO.epoch); 
         
@@ -24,7 +23,7 @@ class SatelliteManager {
             minutesSinceEpoch
         );
 
-        const satelliteMesh = createSatelliteMesh(orbitResult.position);
+        const satelliteMesh = createSatelliteMesh(satelliteDTO, orbitResult.position);
         this.scene.add(satelliteMesh);
 
         const orbitCurve = await this.createOrbitCurve(satelliteDTO.tleLine1, satelliteDTO.tleLine2, minutesSinceEpoch);
@@ -39,8 +38,8 @@ class SatelliteManager {
     }
 
     async createOrbitCurve(tleLine1, tleLine2, startOffsetMinutes) {
-        const minutesAhead = 10; // 1 full day (depends on orbit speed)
-        const sampleInterval = 0.001; // Every 10 minutes (adjust for smoothness)
+        const minutesAhead = 90; // 1 full day (depends on orbit speed)
+        const sampleInterval = 1; // Every 10 minutes (adjust for smoothness)
     
         const result = await generate_orbit_path(tleLine1, tleLine2, minutesAhead, sampleInterval, startOffsetMinutes);
 
@@ -49,7 +48,8 @@ class SatelliteManager {
 
         const points = [];
         for (let i = 0; i < pointsArray.length; i += 1) {
-            points.push(new THREE.Vector3(pointsArray[i][0] * scale, pointsArray[i][1] * scale,  pointsArray[i][2] * scale));
+            // points.push(new THREE.Vector3(pointsArray[i][0] * scale, pointsArray[i][1] * scale,  pointsArray[i][2] * scale));
+            points.push(new THREE.Vector3(pointsArray[i][0] * scale, pointsArray[i][2] * scale,  pointsArray[i][1] * scale));
         }
     
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -60,11 +60,9 @@ class SatelliteManager {
     }
 
     async updateSatellites() {
-        this.clock.update(); // ⬅️ Update simulation clock
-
+        this.clock.update(); 
         const scale = GLOBE.RADIUS / 6371;
         for (const sat of this.satellites) {
-            // const minutesSinceEpoch = ((Date.now() - sat.epoch) / 1000 / 60);
             const minutesSinceEpoch = this.clock.getSimulatedMinutesSince(sat.epoch);
 
     
@@ -74,12 +72,10 @@ class SatelliteManager {
                 minutesSinceEpoch
             );
 
-            console.log('Satellite update position:', orbitResult.position);
-    
             sat.mesh.position.set(
                 orbitResult.position[0] * scale,
-                orbitResult.position[1] * scale,
-                orbitResult.position[2] * scale
+                orbitResult.position[2] * scale,
+                orbitResult.position[1] * scale
             );
         }
     }

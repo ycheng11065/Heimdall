@@ -35,6 +35,8 @@ import SpeedControl from './speedControl.jsx';
 const GlobeScene = ({ enableDebugMenu = false }) => {
 	const [sceneReady, setSceneReady] = useState(false);
 
+	const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
 	/**
 	 * Reference to the canvas DOM element where Three.js renders
 	 * @type {React.RefObject<HTMLCanvasElement>}
@@ -79,6 +81,15 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		lakesOpacity: 1.0
 	});
 
+	useEffect(() => {
+		function handleMouseMove(event) {
+			setMousePos({ x: event.clientX, y: event.clientY });
+		}
+	
+		window.addEventListener('mousemove', handleMouseMove);
+		return () => window.removeEventListener('mousemove', handleMouseMove);
+	}, []);
+
 	/**
 	 * Initialize the Three.js scene when the component mounts
 	 * Sets up the canvas, handles window resizing, and manages the animation loop
@@ -113,7 +124,6 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 					await sceneRef.current.satelliteManager.addSatellite(sat);
 				}
 	
-				// ⬇️ ALSO make them update every frame
 				sceneRef.current.addUpdateCallback(() => {
 					sceneRef.current.satelliteManager.updateSatellites();
 				});
@@ -196,6 +206,48 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 					zIndex: 10
 				}}>
 					<SpeedControl satelliteManager={sceneRef.current.satelliteManager} />
+				</div>
+			)}
+
+			{sceneReady && sceneRef.current?.hoveredSatellite && (
+				<div style={{
+					position: 'absolute',
+					left: mousePos.x + 12 + 'px',
+					top: mousePos.y + 12 + 'px',
+					background: 'rgba(0, 0, 0, 0.7)',
+					color: 'white',
+					padding: '6px 8px',
+					borderRadius: '4px',
+					pointerEvents: 'none',
+					fontSize: '12px',
+					zIndex: 100
+				}}>
+					Name: {sceneRef.current.hoveredSatellite.objectName}<br />
+					ID: {sceneRef.current.hoveredSatellite.noradCatId}<br />
+				</div>
+			)}
+
+			{sceneReady && sceneRef.current?.selectedSatellite && (
+				<div style={{
+					position: 'absolute',
+					bottom: '16px',
+					left: '16px',
+					background: 'rgba(0,0,0,0.8)',
+					color: 'white',
+					padding: '8px 10px',
+					borderRadius: '4px',
+					zIndex: 20
+				}}>
+					<h4>Selected Satellite</h4>
+					<b>{sceneRef.current.selectedSatellite.objectName}</b><br />
+					NORAD ID: {sceneRef.current.selectedSatellite.noradCatId}<br />
+					Country: {sceneRef.current.selectedSatellite.countryCode}<br />
+					Launch Date: {sceneRef.current.selectedSatellite.launchDate}<br />
+					Decay Date: {sceneRef.current.selectedSatellite.decayDate}<br />
+					Last Updated: {sceneRef.current.selectedSatellite.lastUpdated}<br />
+					X: {sceneRef.current.selectedSatellite.x}<br />
+					Y: {sceneRef.current.selectedSatellite.y}<br />
+					Z: {sceneRef.current.selectedSatellite.z}<br />
 				</div>
 			)}
 		</>

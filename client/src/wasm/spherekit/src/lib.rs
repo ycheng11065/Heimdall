@@ -78,7 +78,7 @@ pub fn generate_orbit_path(tle_line1: &str, tle_line2: &str, minutes_ahead: f64,
     let num_samples = (minutes_ahead / sample_interval) as usize;
 
     for i in 0..num_samples {
-        let minutes_since_epoch = timestamp + (i as f64 * sample_interval) * 10.0;
+        let minutes_since_epoch = timestamp + (i as f64 * sample_interval);
         if let Ok(prediction) = constants.propagate(sgp4::MinutesSinceEpoch(minutes_since_epoch)) {
             let pos = prediction.position;
 
@@ -87,6 +87,25 @@ pub fn generate_orbit_path(tle_line1: &str, tle_line2: &str, minutes_ahead: f64,
     }
 
     Ok(points.into())
+}
+
+
+pub fn compute_gst(julian_date: f64) -> f64 {
+
+    // 
+    let t = (julian_date - 2451545.0) / 36525.0;
+
+    let mut gst = 280.46061837
+        + 360.98564736629 * (julian_date - 2451545.0)
+        + 0.000387933 * t * t
+        - (t * t * t) / 38710000.0;
+
+    gst = gst % 360.0;
+    if gst < 0.0 {
+        gst += 360.0;
+    }
+
+    gst.to_radians()
 }
 
 fn array3(x: f64, y: f64, z: f64) -> js_sys::Array {
