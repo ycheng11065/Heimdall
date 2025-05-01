@@ -57,7 +57,18 @@ class Globe {
 	 * @private
 	 */
 	_createGeometry() {
-		const geometry = new SphereGeometry(this.radius, this.segments, this.segments);
+		const a = 6378.137; // Equatorial radius
+		const b = 6356.752
+		const targetRadius = GLOBE.RADIUS;
+
+		const equatorialScale = targetRadius;
+		const polarScale = b / a * targetRadius;
+
+		const geometry = new SphereGeometry(1, 64, 64); // unit sphere
+		geometry.scale(equatorialScale, polarScale, equatorialScale);
+
+
+		// const geometry = new SphereGeometry(this.radius, this.segments, this.segments);
 		return geometry;
 	}
 
@@ -69,6 +80,7 @@ class Globe {
 	_createGlobeMesh() {
 		let mesh = new Mesh(this.geometry, this.material);
 		mesh.name = "Globe";
+
 		return mesh;
 	}
 
