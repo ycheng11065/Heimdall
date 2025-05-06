@@ -17,6 +17,10 @@ class ClockManager {
         return (this.simulatedTimeMs - epochMs) / 1000 / 60;
     }
 
+    getSimulatedDate() {
+        return new Date(this.simulatedTimeMs);
+    }
+
     setSpeed(multiplier) {
         this.speedMultiplier = multiplier;
     }

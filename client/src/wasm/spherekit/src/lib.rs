@@ -12,7 +12,7 @@ pub use fibonnaci::fibonacci_sphere;
 pub use polygon::{get_mesh_points, generate_polygon_feature_mesh, DEFAULT_FIBONACCI_POINT_COUNT, PolygonMeshData};
 pub use errors::SphereKitError;
 
-use sgp4::{Elements, Constants};
+use sgp4::{iau_epoch_to_sidereal_time, julian_years_since_j2000, Constants, Elements, MinutesSinceEpoch};
 use wasm_bindgen::prelude::*;
 use js_sys;
 
@@ -49,18 +49,39 @@ pub fn compute_satellite_orbit(tle1: &str, tle2: &str, timestamp: f64) -> Result
     let elements = Elements::from_tle(None, tle1.as_bytes(), tle2.as_bytes())
         .map_err(|e| JsValue::from_str(&format!("TLE parse error: {}", e)))?;
 
+    let epoch_dt = elements.minutes_since_epoch_to_datetime(&MinutesSinceEpoch(0.0))
+        .map_err(|e| JsValue::from_str(&format!("Epoch-to-datetime error: {:?}", e)))?;;
+
     let constants = Constants::from_elements(&elements)
         .map_err(|e| JsValue::from_str(&format!("Constants error: {}", e)))?;
 
     let prediction = constants.propagate(sgp4::MinutesSinceEpoch(timestamp))
         .map_err(|e| JsValue::from_str(&format!("Constants error: {}", e)))?;
 
+    
+    let prop_dt = epoch_dt + sgp4::chrono::Duration::minutes(timestamp as i64);
+
+    let years = julian_years_since_j2000(&prop_dt);
+    let gmst  = iau_epoch_to_sidereal_time(years);
+
+    let cos_theta = gmst.cos();
+    let sin_theta = gmst.sin();
+
     let pos = prediction.position;
-    let vec = prediction.velocity;
+
+    let x_teme = pos[0];
+    let y_teme = pos[1];
+    let z_teme = pos[2];
+
+    let x_ecef =  cos_theta * x_teme + sin_theta * y_teme;
+    let y_ecef = -sin_theta * x_teme + cos_theta * y_teme;
+    let z_ecef = z_teme; // no change in Z-axis
+
+    let position_ecef = [x_ecef, y_ecef, z_ecef];
 
     let js_result = js_sys::Object::new();
-    js_sys::Reflect::set(&js_result, &"position".into(), &array3(pos[0], pos[1], pos[2]))?;
-    js_sys::Reflect::set(&js_result, &"velocity".into(), &array3(vec[0], vec[1], vec[2]))?;
+    js_sys::Reflect::set(&js_result, &"position".into(), &array3(position_ecef[0], position_ecef[1], position_ecef[2]))?;
+    // js_sys::Reflect::set(&js_result, &"velocity".into(), &array3(vec[0], vec[1], vec[2]))?;
 
     Ok(js_result.into())
 }
@@ -87,25 +108,6 @@ pub fn generate_orbit_path(tle_line1: &str, tle_line2: &str, minutes_ahead: f64,
     }
 
     Ok(points.into())
-}
-
-
-pub fn compute_gst(julian_date: f64) -> f64 {
-
-    // 
-    let t = (julian_date - 2451545.0) / 36525.0;
-
-    let mut gst = 280.46061837
-        + 360.98564736629 * (julian_date - 2451545.0)
-        + 0.000387933 * t * t
-        - (t * t * t) / 38710000.0;
-
-    gst = gst % 360.0;
-    if gst < 0.0 {
-        gst += 360.0;
-    }
-
-    gst.to_radians()
 }
 
 fn array3(x: f64, y: f64, z: f64) -> js_sys::Array {

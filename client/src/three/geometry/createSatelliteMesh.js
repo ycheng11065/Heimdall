@@ -11,11 +11,11 @@ export function createSatelliteMesh(satelliteDTO, positionKm, color = 0xff0000) 
 
 	mesh.position.set(
 		positionKm[0] * scale,
-		positionKm[2] * scale,
-		positionKm[1] * scale
+		positionKm[1] * scale,
+		positionKm[2] * scale
 	);
 
-	console.log(satelliteDTO.noradCatId);
+	// console.log(satelliteDTO.noradCatId);
 
 	mesh.userData = {
 		noradCatId: satelliteDTO.noradCatId,
@@ -28,8 +28,8 @@ export function createSatelliteMesh(satelliteDTO, positionKm, color = 0xff0000) 
         tleLine1: satelliteDTO.tleLine1,
         tleLine2: satelliteDTO.tleLine2,
 		x: positionKm[0] * scale,
-		y: positionKm[2] * scale,
-		z: positionKm[1] * scale
+		y: positionKm[1] * scale,
+		z: positionKm[2] * scale
 	}
 
 	return mesh;

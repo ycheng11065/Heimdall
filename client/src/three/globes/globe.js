@@ -48,7 +48,7 @@ class Globe {
 		 * The 3D mesh representing the globe.
 		 * @type {Mesh}
 		 */
-		this.globeMesh = this._createGlobeMesh();
+	this.globeMesh = this._createGlobeMesh();
 	}
 
 	/**

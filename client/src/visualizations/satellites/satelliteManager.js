@@ -3,6 +3,7 @@ import { compute_satellite_orbit, generate_orbit_path } from '../../wasm/spherek
 import * as THREE from 'three';
 import { GLOBE } from '../../three/constants.js';
 import ClockManager from './clock.js';
+import * as satellite from 'satellite.js';
 
 class SatelliteManager {
     constructor(scene) {
@@ -12,28 +13,26 @@ class SatelliteManager {
     }
 
     async addSatellite(satelliteDTO) {
-        const now = Date.now();
+        const now = new Date();
         const epoch = Date.parse(satelliteDTO.epoch); 
         
-        const minutesSinceEpoch = (now - epoch) / 1000 / 60;
-        
-        const orbitResult = await compute_satellite_orbit(
-            satelliteDTO.tleLine1,
-            satelliteDTO.tleLine2,
-            minutesSinceEpoch
-        );
+        const satrec = satellite.twoline2satrec(satelliteDTO.tleLine1, satelliteDTO.tleLine2);
+        const eci = satellite.propagate(satrec, now);
 
-        const satelliteMesh = createSatelliteMesh(satelliteDTO, orbitResult.position);
+        // 2. Compute GMST and turn ECI → ECF (Earth-fixed)
+        const gmst = satellite.gstime(now);
+        const ecf  = satellite.eciToEcf(eci.position, gmst);
+        const position = [ecf.y, ecf.z, ecf.x];
+
+        const satelliteMesh = createSatelliteMesh(satelliteDTO, position);
         this.scene.add(satelliteMesh);
-
-        const orbitCurve = await this.createOrbitCurve(satelliteDTO.tleLine1, satelliteDTO.tleLine2, minutesSinceEpoch);
-        this.scene.add(orbitCurve);
 
         this.satellites.push({
             mesh: satelliteMesh,
             tleLine1: satelliteDTO.tleLine1,
             tleLine2: satelliteDTO.tleLine2,
-            epoch
+            epoch: epoch,
+            satrec: satrec
         });
     }
 
@@ -60,25 +59,52 @@ class SatelliteManager {
     }
 
     async updateSatellites() {
-        this.clock.update(); 
-        const scale = GLOBE.RADIUS / 6371;
+        this.clock.update();
+        const scale = GLOBE.RADIUS / 6371;  
+        const nowMillis = Date.now();
+
         for (const sat of this.satellites) {
             const minutesSinceEpoch = this.clock.getSimulatedMinutesSince(sat.epoch);
+            console.log("mins since epoch:", minutesSinceEpoch);
 
-    
-            const orbitResult = await compute_satellite_orbit(
-                sat.tleLine1,
-                sat.tleLine2,
-                minutesSinceEpoch
-            );
+            const eci = satellite.sgp4(sat.satrec, minutesSinceEpoch);
+            if (!eci.position) continue; 
+            const gmst = satellite.gstime(this.clock.getSimulatedDate());
+            const ecf  = satellite.eciToEcf(eci.position, gmst);
+            const position = [ecf.y, ecf.z, ecf.x];
+            console.log("new pos", position);
 
             sat.mesh.position.set(
-                orbitResult.position[0] * scale,
-                orbitResult.position[2] * scale,
-                orbitResult.position[1] * scale
+                position[0] * scale,
+                position[1] * scale,
+                position[2] * scale
             );
         }
     }
+
+    // async updateSatellites() {
+    //     this.clock.update(); 
+    //     const scale = GLOBE.RADIUS / 6371;
+    //     const nowMillis = Date.now();
+
+    //     for (const sat of this.satellites) {
+    //         const minutesSinceEpoch = this.clock.getSimulatedMinutesSince(sat.epoch);
+
+    
+    //         const orbitResult = await compute_satellite_orbit(
+    //             sat.tleLine1,
+    //             sat.tleLine2,
+    //             minutesSinceEpoch
+    //         );
+
+    //         sat.mesh.position.set(
+    //             orbitResult.position[0] * scale,
+    //             orbitResult.position[2] * scale,
+    //             orbitResult.position[1] * scale,
+    //             nowMillis
+    //         );
+    //     }
+    // }
 
     setSpeed(multiplier) {
         this.clock.setSpeed(multiplier);

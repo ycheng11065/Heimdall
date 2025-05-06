@@ -207,6 +207,9 @@ public class SatelliteService {
     public Mono<SatelliteEntity> updateSatelliteDatabase(Satellite updatedSatellite) {
         return satelliteRepository.findByNoradCatId(updatedSatellite.getNoradCatId())
                 .flatMap(existing -> {
+
+
+
                     boolean tleChanged = !existing.getTleLine1().equals(updatedSatellite.getTleLine1()) ||
                             !existing.getTleLine2().equals(updatedSatellite.getTleLine2());
 

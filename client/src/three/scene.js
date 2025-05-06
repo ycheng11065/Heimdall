@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import GlobeCamera from './camera.js';
 import Earth from './globes/earth.js';
 import SatelliteManager from '../visualizations/satellites/satelliteManager.js';
+import { GLOBE } from '../three/constants.js';
 
 /**
  * Manages the 3D scene containing an Earth globe, handling rendering,
@@ -93,6 +94,9 @@ class GlobeSceneManager {
 		this.earth = new Earth(this.scene);
 
 		this.satelliteManager = new SatelliteManager(this.scene);
+
+		this._addTestAxes();
+		this._addTestMarkers();
 
 		// this.canvas.addEventListener('mousemove', (event) => {
 		// 	const rect = this.canvas.getBoundingClientRect();
@@ -241,6 +245,45 @@ class GlobeSceneManager {
 		this.camera.dispose();
 		this.earth.dispose();
 	}
+
+	_addTestMarkers() {
+		const pointGeom = new THREE.SphereGeometry(GLOBE.RADIUS * 0.02, 8, 8);
+		const yellowMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+		const positions = [
+		  [  0,   0],  // lat=0, lon=0
+		  [  0,  90],  // lat=0, lon=90E
+		  [ 90,   0],  // North pole
+		];
+	  
+		for (const [lat, lon] of positions) {
+		  const φ = THREE.MathUtils.degToRad(lat);
+		  const λ = THREE.MathUtils.degToRad(lon);
+		  const rKm = 6371; 
+		  const x = rKm * Math.cos(φ) * Math.cos(λ);
+		  const y = rKm * Math.cos(φ) * Math.sin(λ);
+		  const z = rKm * Math.sin(φ);
+		  const dot = new THREE.Mesh(pointGeom, yellowMat);
+		  dot.position.set(
+			x * (GLOBE.RADIUS/6371),
+			y * (GLOBE.RADIUS/6371),
+			z * (GLOBE.RADIUS/6371)
+		  );
+		  this.scene.add(dot);
+		}
+	  }
+	  
+	  _addTestAxes() {
+		const len = GLOBE.RADIUS * 1.2;
+		this.scene.add(new THREE.ArrowHelper(
+		  new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), len, 0xff0000
+		));
+		this.scene.add(new THREE.ArrowHelper(
+		  new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), len, 0x00ff00
+		));
+		this.scene.add(new THREE.ArrowHelper(
+		  new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), len, 0x0000ff
+		));
+	  }
 }
 
 export default GlobeSceneManager;

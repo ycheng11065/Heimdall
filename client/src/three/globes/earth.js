@@ -61,6 +61,8 @@ class Earth extends Globe {
 		 */
 		this.lakeIndices = new THREE.Group();
 
+		this.textureContainer = new THREE.Group();
+		this.scene.add(this.textureContainer);
 		this._init();
 	}
 
@@ -69,9 +71,12 @@ class Earth extends Globe {
 	 * @private
 	 */
 	_init() {
-		this.scene.add(this.getGlobeMesh()); // add parent globe mesh to the scene
+		this.textureContainer.add(this.getGlobeMesh());
 		this._initLand();
 		this._initLakes();
+
+		// Rotate texture clockwise to align Null Island to 0,0
+		this.textureContainer.rotation.y = -Math.PI / 2;
 	}
 
 	/**
@@ -86,7 +91,7 @@ class Earth extends Globe {
 			});
 
 			this.landMeshes.name = "LandGroup";
-			this.scene.add(this.landMeshes);
+			this.textureContainer.add(this.landMeshes);
 		}).catch(error => {
 			console.error('Error processing GeoJSON:', error);
 		});
@@ -104,7 +109,7 @@ class Earth extends Globe {
 			});
 
 			this.lakeMeshes.name = "LakesGroup";
-			this.scene.add(this.lakeMeshes);
+			this.textureContainer.add(this.lakeMeshes);
 		}).catch(error => {
 			console.error('Error processing GeoJSON:', error);
 		});
@@ -125,7 +130,7 @@ class Earth extends Globe {
 
 		this.landIndices.name = "LandIndices";
 		this.landIndices.visible = false;
-		this.scene.add(this.landIndices);
+		this.textureContainer.add(this.landIndices);
 	}
 
 	/**
@@ -145,7 +150,7 @@ class Earth extends Globe {
 
 		this.lakeIndices.name = "LakeIndices";
 		this.lakeIndices.visible = false;
-		this.scene.add(this.lakeIndices);
+		this.textureContainer.add(this.lakeIndices);
 	}
 
 	/**
