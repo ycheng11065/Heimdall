@@ -70,15 +70,18 @@ class Earth extends Globe {
 	 */
 	_init() {
 		this.scene.add(this.getGlobeMesh()); // add parent globe mesh to the scene
-		this._initLand();
-		this._initLakes();
+		this._init110m(); // initialize 110m geometries
+	}
+
+	_init110m() {
+		this._init110mLand();
 	}
 
 	/**
 	 * Loads and initializes land mass geometries from GeoJSON data
 	 * @private
 	 */
-	_initLand() {
+	_init110mLand() {
 		fetchGeoJSON('ne_110m_land').then(geojson => {
 			let landGroup = generateGeoPolygonMeshes(geojson, GEO_FEATURE.LAND);
 			landGroup.forEach(mesh => {
@@ -87,25 +90,6 @@ class Earth extends Globe {
 
 			this.landMeshes.name = "LandGroup";
 			this.scene.add(this.landMeshes);
-		}).catch(error => {
-			console.error('Error processing GeoJSON:', error);
-		});
-	}
-
-	/**
-	 * Loads and initializes lake geometries from GeoJSON data
-	 * @private
-	 */
-	_initLakes() {
-		fetchGeoJSON('ne_110m_lakes').then(geojson => {
-			let lakesGroup = generateGeoPolygonMeshes(geojson, GEO_FEATURE.LAKES);
-			lakesGroup.forEach(mesh => {
-				this.lakeMeshes.add(mesh);
-			});
-
-			this.lakeMeshes.name = "LakesGroup";
-			this.lakeMeshes.visible = false; // initially hide lakes
-			this.scene.add(this.lakeMeshes);
 		}).catch(error => {
 			console.error('Error processing GeoJSON:', error);
 		});
@@ -127,26 +111,6 @@ class Earth extends Globe {
 		this.landIndices.name = "LandIndices";
 		this.landIndices.visible = false;
 		this.scene.add(this.landIndices);
-	}
-
-	/**
-	 * Generates debug visualization for lake vertices
-	 * Creates sphere meshes at each vertex of lake geometries
-	 * @private
-	 */
-	_generateLakeIndices() {
-		this.lakeIndices = new THREE.Group();
-
-		this.lakeMeshes.children.forEach(mesh => {
-			const indices = generateShapeIndices(mesh.geometry);
-			indices.forEach(index => {
-				this.lakeIndices.add(index);
-			});
-		});
-
-		this.lakeIndices.name = "LakeIndices";
-		this.lakeIndices.visible = false;
-		this.scene.add(this.lakeIndices);
 	}
 
 	/**
@@ -177,33 +141,6 @@ class Earth extends Globe {
 	}
 
 	/**
-	 * Makes lakes visible
-	 */
-	showLakes() {
-		this.lakeMeshes.visible = true;
-	}
-
-	/**
-	 * Hides lakes
-	 */
-	hideLakes() {
-		this.lakeMeshes.visible = false;
-	}
-
-	/**
-	 * Sets the opacity of all lake meshes
-	 * @param {number} opacity - The opacity value (0.0-1.0)
-	 */
-	setLakesOpacity(opacity) {
-		this.lakeMeshes.traverse((child) => {
-			if (child.isMesh) {
-				child.material.opacity = opacity;
-				child.material.transparent = true;
-			}
-		});
-	}
-
-	/**
 	 * Makes land vertex indices visible
 	 * Generates indices if they don't exist yet
 	 */
@@ -223,25 +160,6 @@ class Earth extends Globe {
 	}
 
 	/**
-	 * Makes lake vertex indices visible
-	 * Generates indices if they don't exist yet
-	 */
-	showLakeIndices() {
-		if (this.lakeIndices.children.length === 0) {
-			this._generateLakeIndices();
-		}
-
-		this.lakeIndices.visible = true;
-	}
-
-	/**
-	 * Hides lake vertex indices
-	 */
-	hideLakeIndices() {
-		this.lakeIndices.visible = false;
-	}
-
-	/**
 	 * Disposes of all resources to prevent memory leaks
 	 * Calls the parent Globe's dispose method and cleans up all groups
 	 */
@@ -249,9 +167,7 @@ class Earth extends Globe {
 		super.dispose(this.scene);
 		
 		disposeGroup(this.landMeshes);
-		disposeGroup(this.lakeMeshes);
 		disposeGroup(this.landIndices);
-		disposeGroup(this.lakeIndices);
 
 		this.landMeshes = null;
 		this.lakeMeshes = null;

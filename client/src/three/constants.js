@@ -1,14 +1,14 @@
 export const CAMERA = {
-    FOV: 75,                            // field of view
-    NEAR: 0.1,                          // min distance clipping
-    FAR: 1000,                          // max distance clipping    
+    FOV: 75,                             // field of view
+    NEAR: 0.1,                           // min distance clipping
+    FAR: 1000,                           // max distance clipping    
     INITIAL_POSITION: [0, 0, 50],
     LOOK_AT: [0, 0, 0],
     CONTROLS: {
-        DAMPING: true,                  // inertia damping
+        DAMPING: true,                   // inertia damping
         DAMPING_FACTOR: 0.05,
-        MIN_DISTANCE: 10.2,               // zoom min distance
-        MAX_DISTANCE: 50,               // zoom max distance
+        MIN_DISTANCE: 15,              // zoom min distance
+        MAX_DISTANCE: 50,                // zoom max distance
         MIN_POLAR_ANGLE: Math.PI * 0.01, // min angle of the camera
         MAX_POLAR_ANGLE: Math.PI * 0.99  // max angle of the camera
     }

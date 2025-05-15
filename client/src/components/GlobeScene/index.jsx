@@ -55,16 +55,12 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 	 * @property {boolean} showGlobe - Whether to show the base globe
 	 * @property {boolean} showLand - Whether to show land masses
 	 * @property {boolean} showLandIndices - Whether to show debug indices for land
-	 * @property {boolean} showLakes - Whether to show lakes
-	 * @property {boolean} showLakeIndices - Whether to show debug indices for lakes
 	 */
 	const [debugOptions, setDebugOptions] = useState({
 		wireFrame: false,
 		showGlobe: true,
 		showLand: true,
 		showLandIndices: false,
-		showLakes: false,
-		showLakeIndices: false
 	});
 
 	/**
@@ -72,12 +68,10 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 	 * @type {Object}
 	 * @property {number} globeOpacity - Opacity value for the base globe (0.0-1.0)
 	 * @property {number} landOpacity - Opacity value for land masses (0.0-1.0)
-	 * @property {number} lakesOpacity - Opacity value for lakes (0.0-1.0)
 	 */
 	const [sliderFloats, setSliderFloats] = useState({
 		globeOpacity: 1.0,
 		landOpacity: 1.0,
-		lakesOpacity: 1.0
 	});
 
 	/**
@@ -126,14 +120,12 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		if (!sceneRef.current) return;
 		
 		const earth = sceneRef.current.earth;
-		const { wireFrame, showGlobe, showLand, showLandIndices, showLakes, showLakeIndices } = debugOptions;
+		const { wireFrame, showGlobe, showLand, showLandIndices } = debugOptions;
 		
 		wireFrame ? earth.useWireframe() : earth.useSolid();
 		showGlobe ? earth.showGlobe() : earth.hideGlobe();
 		showLand ? earth.showLand() : earth.hideLand();
-		showLakes ? earth.showLakes() : earth.hideLakes();
 		showLandIndices ? earth.showLandIndices() : earth.hideLandIndices();
-		showLakeIndices ? earth.showLakeIndices() : earth.hideLakeIndices();
 	}, [debugOptions]);
 
 	/**
@@ -144,11 +136,10 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		if (!sceneRef.current) return;
 
 		const earth = sceneRef.current.earth;
-		const { globeOpacity, landOpacity, lakesOpacity } = sliderFloats;
+		const { globeOpacity, landOpacity } = sliderFloats;
 
 		earth.setGlobeOpacity(globeOpacity);
 		earth.setLandOpacity(landOpacity);
-		earth.setLakesOpacity(lakesOpacity);
 	}, [sliderFloats]);
 
 	return (
