@@ -43,6 +43,12 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 	const sceneRef = useRef(null);
 	
 	/**
+	 * State to track if the scene has been loaded
+	 * @type {boolean}
+	 */
+	const [sceneLoaded, setSceneLoaded] = useState(false);
+
+	/**
 	 * Debug options state for controlling scene features
 	 * @type {Object}
 	 * @property {boolean} wireFrame - Whether to render in wireframe mode
@@ -57,18 +63,18 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		showGlobe: true,
 		showLand: true,
 		showLandIndices: false,
-		showLakes: true,
+		showLakes: false,
 		showLakeIndices: false
 	});
 
 	/**
-	 * Debug float values for controlling opacity of scene elements
+	 * Slider float values for controlling opacity of scene elements
 	 * @type {Object}
 	 * @property {number} globeOpacity - Opacity value for the base globe (0.0-1.0)
 	 * @property {number} landOpacity - Opacity value for land masses (0.0-1.0)
 	 * @property {number} lakesOpacity - Opacity value for lakes (0.0-1.0)
 	 */
-	const [debugFloats, setDebugFloats] = useState({
+	const [sliderFloats, setSliderFloats] = useState({
 		globeOpacity: 1.0,
 		landOpacity: 1.0,
 		lakesOpacity: 1.0
@@ -101,6 +107,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 			setupGlobeScene(canvasRef.current).then((globeSceneManager) => {
 				sceneRef.current = globeSceneManager;
 				sceneRef.current.startAnimationLoop();
+				setSceneLoaded(true);
 			});
 		}
 		
@@ -137,17 +144,17 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		if (!sceneRef.current) return;
 
 		const earth = sceneRef.current.earth;
-		const { globeOpacity, landOpacity, lakesOpacity } = debugFloats;
+		const { globeOpacity, landOpacity, lakesOpacity } = sliderFloats;
 
 		earth.setGlobeOpacity(globeOpacity);
 		earth.setLandOpacity(landOpacity);
 		earth.setLakesOpacity(lakesOpacity);
-	}, [debugFloats]);
+	}, [sliderFloats]);
 
 	return (
 		<>
 			{/* Debug menu - conditionally rendered based on enableDebugMenu prop */}
-			{enableDebugMenu && (
+			{enableDebugMenu && sceneLoaded && (
 				<div style={{
 					position: 'absolute',
 					top: '16px',
@@ -157,8 +164,9 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 					<DebugMenu
 						debugOptions={debugOptions}
 						setDebugOptions={setDebugOptions}
-						debugFloats={debugFloats}
-						setDebugFloats={setDebugFloats}
+						sliderFloats={sliderFloats}
+						setSliderFloats={setSliderFloats}
+						camera={sceneRef.current?.camera} // pass camera reference if available
 					/>
 				</div>
 			)}

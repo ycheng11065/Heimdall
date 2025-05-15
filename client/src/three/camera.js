@@ -31,6 +31,8 @@ class GlobeCamera extends THREE.PerspectiveCamera {
             CAMERA.NEAR,
             CAMERA.FAR
         );
+
+        this.eventDispatcher = new THREE.EventDispatcher();
         
         this.position.set(...CAMERA.INITIAL_POSITION);
         this.lookAt(...CAMERA.LOOK_AT);
@@ -45,10 +47,13 @@ class GlobeCamera extends THREE.PerspectiveCamera {
         this.controls.minPolarAngle = CAMERA.CONTROLS.MIN_POLAR_ANGLE;
         this.controls.maxPolarAngle = CAMERA.CONTROLS.MAX_POLAR_ANGLE;
 
-        // end event for to adjust rotation at end of camera manipulation
-        this.controls.addEventListener('end', this.#adjustRotationSpeed.bind(this));
+        this.zoom = this.controls.getDistance(); // the distance from the camera to the target
+        this._previousZoom = this.zoom; // the previous zoom level
 
-        this.#adjustRotationSpeed();
+        // end event for to adjust rotation and zoom at end of camera manipulation
+        this.controls.addEventListener('end', this.#updateVariables.bind(this));
+
+        this.#updateVariables();
     }
 
     /**
@@ -56,14 +61,50 @@ class GlobeCamera extends THREE.PerspectiveCamera {
      * @description Adjusts the rotation speed of the camera controls based on the current distance.
      * A non-linear adjustment that makes rotation slower when zoomed in (for precision)
      * and faster when zoomed out (for easier navigation).
+     * This method also updates the zoom variable.
      * 
      * @returns {void}
      */
-    #adjustRotationSpeed() {
+    #updateVariables() {
+        // adjust the rotation speed based on the distance to the target
         const distance = this.position.distanceTo(this.controls.target);
         const minDistance = CAMERA.CONTROLS.MIN_DISTANCE;
         const currentRelativeDistance = (distance - minDistance) / this.zoomRange;
         this.controls.rotateSpeed = 0.01 + 0.5 * currentRelativeDistance;
+
+        // update zoom variable
+        this.zoom = this.controls.getDistance();
+
+        if (this.zoom !== this._previousZoom) {
+            this._previousZoom = this.zoom;
+
+            const zoomEvent = { type: 'zoom', zoom: this.zoom };
+            this.eventDispatcher.dispatchEvent(zoomEvent);
+
+            this._previousZoom = this.zoom;
+        }
+    }
+
+    /**
+     * Registers an event listener for camera events
+     * 
+     * @param {string} event - The event type to listen for (e.g. 'zoom')
+     * @param {Function} callback - The callback function to execute when the event occurs
+     * @returns {void}
+     */
+    addEventListener(event, callback) {
+        this.eventDispatcher.addEventListener(event, callback);
+    }
+
+    /**
+     * Removes a previously registered event listener
+     * 
+     * @param {string} event - The event type to remove listener from
+     * @param {Function} callback - The callback function to remove
+     * @returns {void}
+     */
+    removeEventListener(event, callback) {
+        this.eventDispatcher.removeEventListener(event, callback);
     }
 
     /**

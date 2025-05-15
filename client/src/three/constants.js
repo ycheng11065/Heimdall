@@ -2,7 +2,7 @@ export const CAMERA = {
     FOV: 75,                            // field of view
     NEAR: 0.1,                          // min distance clipping
     FAR: 1000,                          // max distance clipping    
-    INITIAL_POSITION: [0, 0, 25],
+    INITIAL_POSITION: [0, 0, 50],
     LOOK_AT: [0, 0, 0],
     CONTROLS: {
         DAMPING: true,                  // inertia damping

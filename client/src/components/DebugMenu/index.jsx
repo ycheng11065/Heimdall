@@ -18,13 +18,19 @@ import "./style.css";
  * @param {Object} props - The component props
  * @param {Object} props.debugOptions - Object containing boolean toggle options
  * @param {Function} props.setDebugOptions - State setter for updating debug options
- * @param {Object} props.debugFloats - Object containing float values for sliders
- * @param {Function} props.setDebugFloats - State setter for updating float values
+ * @param {Object} props.sliderFloats - Object containing slider float values for sliders
+ * @param {Function} props.setSliderFloats - State setter for updating slider float values
+ * @param {Object} props.camera - Camera object with zoom property and addEventListener method
  * @returns {JSX.Element} The rendered DebugMenu component
  */
-const DebugMenu = ({ debugOptions, setDebugOptions, debugFloats, setDebugFloats }) => {
+const DebugMenu = ({ debugOptions, setDebugOptions, sliderFloats, setSliderFloats, camera }) => {
 	const [isOpen, setIsOpen] = useState(false);
-	
+	const [cameraZoom, setCameraZoom] = useState(camera.zoom);
+
+	camera.addEventListener("zoom", (e) => {
+		setCameraZoom(e.zoom);
+	});
+
 	/**
 	 * Toggles the visibility state of the debug menu
 	 */
@@ -47,8 +53,8 @@ const DebugMenu = ({ debugOptions, setDebugOptions, debugFloats, setDebugFloats 
 	 * @param {string} optionName - The name of the float option to update
 	 */
 	const handleSliderChange = (e, optionName) => {
-		setDebugFloats({
-			...debugFloats,
+		setSliderFloats({
+			...sliderFloats,
 			[optionName]: parseFloat(e.target.value)
 		});
 	};
@@ -90,7 +96,7 @@ const DebugMenu = ({ debugOptions, setDebugOptions, debugFloats, setDebugFloats 
 					{/* Sliders section */}
 					<div className="debug-section">
 						<h3 className="debug-heading">Opacity Controls</h3>
-						{Object.entries(debugFloats).map(([option, value]) => (
+						{Object.entries(sliderFloats).map(([option, value]) => (
 							<div key={option} className="debug-row">
 								<div className="debug-slider-row">
 									<label className="debug-label">{formatLabel(option)}</label>
@@ -107,6 +113,13 @@ const DebugMenu = ({ debugOptions, setDebugOptions, debugFloats, setDebugFloats 
 								/>
 							</div>
 						))}
+					</div>
+
+					{/* Metrics */}
+					<div className="debug-section">
+						<h3 className="debug-heading">Metrics</h3>
+						<p>Zoom: {cameraZoom.toFixed(2)}</p>
+						<p></p>
 					</div>
 				</div>
 			)}

@@ -104,6 +104,7 @@ class Earth extends Globe {
 			});
 
 			this.lakeMeshes.name = "LakesGroup";
+			this.lakeMeshes.visible = false; // initially hide lakes
 			this.scene.add(this.lakeMeshes);
 		}).catch(error => {
 			console.error('Error processing GeoJSON:', error);
@@ -246,12 +247,12 @@ class Earth extends Globe {
 	 */
 	dispose() {
 		super.dispose(this.scene);
-	
+		
 		disposeGroup(this.landMeshes);
 		disposeGroup(this.lakeMeshes);
 		disposeGroup(this.landIndices);
 		disposeGroup(this.lakeIndices);
-		
+
 		this.landMeshes = null;
 		this.lakeMeshes = null;
 		this.landIndices = null;
