@@ -58,6 +58,7 @@ class Earth extends Globe {
 	 */
 	async _initLand() {
 
+		// Load 110m land meshes
 		try {
 			const geojson = await fetchLandGeoJSON(this.scale);
 
@@ -72,31 +73,14 @@ class Earth extends Globe {
 			});
 
 			geoWorker.onmessage = (e) => {
-				for (const mesh of e.data.meshes) {
-					const geometry = new THREE.BufferGeometry();
-					geometry.setAttribute('position', new THREE.Float32BufferAttribute(mesh.geometry.positionArray, 3));
-					geometry.setIndex(new THREE.BufferAttribute(mesh.geometry.indexArray, 1));
-
-					const material = new THREE.MeshBasicMaterial({
-						color: mesh.material.color,
-						transparent: mesh.material.transparent,
-						opacity: mesh.material.opacity,
-						side: mesh.material.side
-					});
-
-					const landMesh = new THREE.Mesh(geometry, material);
-					landMesh.name = mesh.name;
-
-					this.landMeshes110m.add(landMesh);
-				}
 				console.log("Land meshes 1:110m loaded");
-				this.landMeshes110m.name = "LandGroup";
-				this.scene.add(this.landMeshes110m);
+				this.deserializeLandMeshes(e.data.meshes, this.landMeshes110m, true);
 			}
 		} catch (error) {
 			console.error('Error processing GeoJSON:', error);
 		}
 
+		// Load 50m land meshes
 		try {
 			const geojson = await fetchLandGeoJSON(GLOBE.SCALES.S50M);
 			
@@ -111,31 +95,14 @@ class Earth extends Globe {
 			});
 
 			geoWorker.onmessage = (e) => {
-				for (const mesh of e.data.meshes) {
-					const geometry = new THREE.BufferGeometry();
-					geometry.setAttribute('position', new THREE.Float32BufferAttribute(mesh.geometry.positionArray, 3));
-					geometry.setIndex(new THREE.BufferAttribute(mesh.geometry.indexArray, 1));
-
-					const material = new THREE.MeshBasicMaterial({
-						color: mesh.material.color,
-						transparent: mesh.material.transparent,
-						opacity: mesh.material.opacity,
-						side: mesh.material.side
-					});
-
-					const landMesh = new THREE.Mesh(geometry, material);
-					landMesh.name = mesh.name;
-					this.landMeshes50m.add(landMesh);
-				}
 				console.log("Land meshes 1:50m loaded");
-				this.landMeshes50m.name = "LandGroup";
-				this.landMeshes50m.visible = false; // Initially hide the 50m meshes
-				this.scene.add(this.landMeshes50m);
+				this.deserializeLandMeshes(e.data.meshes, this.landMeshes50m, false);
 			}
 		} catch (error) {
 			console.error('Error processing GeoJSON:', error);
 		}
 
+		// Load 10m meshes
 		try {
 			const geojson = await fetchLandGeoJSON(GLOBE.SCALES.S10M);
 			
@@ -150,32 +117,17 @@ class Earth extends Globe {
 			});
 
 			geoWorker.onmessage = (e) => {
-				for (const mesh of e.data.meshes) {
-					const geometry = new THREE.BufferGeometry();
-					geometry.setAttribute('position', new THREE.Float32BufferAttribute(mesh.geometry.positionArray, 3));
-					geometry.setIndex(new THREE.BufferAttribute(mesh.geometry.indexArray, 1));
-
-					const material = new THREE.MeshBasicMaterial({
-						color: mesh.material.color,
-						transparent: mesh.material.transparent,
-						opacity: mesh.material.opacity,
-						side: mesh.material.side
-					});
-
-					const landMesh = new THREE.Mesh(geometry, material);
-					landMesh.name = mesh.name;
-					this.landMeshes10m.add(landMesh);
-				}
 				console.log("Land meshes 1:10m loaded");
-				this.landMeshes10m.name = "LandGroup";
-				this.landMeshes10m.visible = false; // Initially hide the 10m meshes
-				this.scene.add(this.landMeshes10m);
+				this.deserializeLandMeshes(e.data.meshes, this.landMeshes10m, false);
 			}
 		} catch (error) {
 			console.error('Error processing GeoJSON:', error);
 		}
 	}
-
+	/**
+	 * Sets the scale of the globe and updates visibility of land meshes
+	 * @param {number} scale - The scale to set (e.g., GLOBE.SCALES.S110M, GLOBE.SCALES.S50M, GLOBE.SCALES.S10M)
+	 */
 	setScale(scale) {
 		if (this.scale !== scale) {
 			this.scale = scale;
@@ -185,6 +137,37 @@ class Earth extends Globe {
 		}
 	}
 
+	/**
+	 * Deserializes land meshes from the worker and adds them to the scene
+	 * @param {Array} landMeshes - Array of land mesh data
+	 * @param {THREE.Group} landMeshGroup - The group to which the meshes will be added
+	 * @param {boolean} isVisible - Whether the land meshes should be visible
+	 * @private
+	 * */
+	deserializeLandMeshes(landMeshes, landMeshGroup, isVisible) {
+		landMeshes.forEach(mesh => {
+			const geometry = new THREE.BufferGeometry();
+			geometry.setAttribute('position', new THREE.Float32BufferAttribute(mesh.geometry.positionArray, 3));
+			geometry.setIndex(new THREE.BufferAttribute(mesh.geometry.indexArray, 1));
+
+			const material = new THREE.MeshBasicMaterial({
+				color: mesh.material.color,
+				transparent: mesh.material.transparent,
+				opacity: mesh.material.opacity,
+				side: mesh.material.side
+			});
+
+			const landMesh = new THREE.Mesh(geometry, material);
+			landMesh.name = mesh.name;
+
+			landMeshGroup.add(landMesh);
+		});
+
+		landMeshGroup.name = "LandGroup";
+		landMeshGroup.visible = isVisible;
+
+		this.scene.add(landMeshGroup);
+	}
 
 	/**
 	 * Generates debug visualization for land vertices

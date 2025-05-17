@@ -2,10 +2,7 @@ import { generateGeoPolygonMeshes } from './globeGeoRenderers.js';
 import { GEOWORKER_COMMANDS } from '../constants.js';
 import initWasm from '../../wasm/spherekit/pkg/spherekit.js';
 
-// TODO: work with transferables for optimization. 
-// Also, maybe don't create the meshes just to delete them after
-
-
+// TODO: transferables for optimization. 
 
 const serializeMesh = (mesh) => {
     const geometry = mesh.geometry;

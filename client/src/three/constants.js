@@ -7,7 +7,7 @@ export const CAMERA = {
     CONTROLS: {
         DAMPING: true,                   // inertia damping
         DAMPING_FACTOR: 0.05,
-        MIN_DISTANCE: 10.1,              // zoom min distance
+        MIN_DISTANCE: 10.4,              // zoom min distance
         MAX_DISTANCE: 50,                // zoom max distance
         MIN_POLAR_ANGLE: Math.PI * 0.01, // min angle of the camera
         MAX_POLAR_ANGLE: Math.PI * 0.99  // max angle of the camera
