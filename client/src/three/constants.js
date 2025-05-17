@@ -7,7 +7,7 @@ export const CAMERA = {
     CONTROLS: {
         DAMPING: true,                   // inertia damping
         DAMPING_FACTOR: 0.05,
-        MIN_DISTANCE: 15,              // zoom min distance
+        MIN_DISTANCE: 10.1,              // zoom min distance
         MAX_DISTANCE: 50,                // zoom max distance
         MIN_POLAR_ANGLE: Math.PI * 0.01, // min angle of the camera
         MAX_POLAR_ANGLE: Math.PI * 0.99  // max angle of the camera
@@ -27,4 +27,13 @@ export const GLOBE = {
     Z_CORRECTED_RADIUS: 10.01, // .01 to be slightly above globe. Used for other objects than the globe
     SEGMENTS: 64,
     COLOR: 0x14b1d9,
+    SCALES: {
+        S110M: 0,
+        S50M: 1,
+        S10M: 2,
+    }
+};
+
+export const GEOWORKER_COMMANDS = {
+    GEN_MESH: "generateGeoPolygonMeshes",
 };

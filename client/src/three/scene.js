@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import GlobeCamera from './camera.js';
 import Earth from './globes/earth.js';
+import { GLOBE } from './constants.js';
 
 /**
  * Manages the 3D scene containing an Earth globe, handling rendering,
@@ -15,46 +16,12 @@ import Earth from './globes/earth.js';
  * @class
  */
 class GlobeSceneManager {
-	/**
-	 * Creates a new GlobeSceneManager instance.
-	 * @param {HTMLCanvasElement} canvas - The canvas element where the scene will be rendered.
-	 */
 	constructor(canvas) {
-		/**
-		 * The canvas element for rendering.
-		 * @type {HTMLCanvasElement}
-		 */
 		this.canvas = canvas;
-
-		/**
-		 * The Three.js WebGL renderer.
-		 * @type {THREE.WebGLRenderer|null}
-		 */
 		this.renderer = null;
-
-		/**
-		 * The Three.js scene.
-		 * @type {THREE.Scene|null}
-		 * @private
-		 */
 		this.scene = null;
-
-		/**
-		 * The camera controller for the scene.
-		 * @type {GlobeCamera|null}
-		 */
 		this.camera = null;
-
-		/**
-		 * The Earth globe model.
-		 * @type {Earth|null}
-		 */
 		this.earth = null;
-
-		/**
-		 * ID of the current animation frame request.
-		 * @type {number|null}
-		 */
 		this.animationFrameId = null;
 
 		this._onWindowResize = this._onWindowResize.bind(this);
@@ -79,7 +46,8 @@ class GlobeSceneManager {
 		this.renderer.setPixelRatio(window.devicePixelRatio);
 		this.scene = new THREE.Scene();
 		this.camera = new GlobeCamera(this.renderer, this.canvas);
-		this.earth = new Earth(this.scene);
+
+		this.earth = new Earth(this.scene, GLOBE.SCALES.S110M);
 	}
 
 	/**

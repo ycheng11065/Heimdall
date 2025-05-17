@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { setupGlobeScene } from '../../three/globeSceneCore.js';
 import DebugMenu from '../DebugMenu/index.jsx';
+import { GLOBE } from '../../three/constants.js';
 
 /**
  * A React component that renders a Three.js scene with a 3D globe.
@@ -30,32 +31,11 @@ import DebugMenu from '../DebugMenu/index.jsx';
  * @returns {JSX.Element} A canvas element where the Three.js scene is rendered, optionally with a debug menu
  */
 const GlobeScene = ({ enableDebugMenu = false }) => {
-	/**
-	 * Reference to the canvas DOM element where Three.js renders
-	 * @type {React.RefObject<HTMLCanvasElement>}
-	 */
 	const canvasRef = useRef(null);
-	
-	/**
-	 * Reference to the globe scene manager instance
-	 * @type {React.RefObject<Object>}
-	 */
 	const sceneRef = useRef(null);
 	
-	/**
-	 * State to track if the scene has been loaded
-	 * @type {boolean}
-	 */
 	const [sceneLoaded, setSceneLoaded] = useState(false);
 
-	/**
-	 * Debug options state for controlling scene features
-	 * @type {Object}
-	 * @property {boolean} wireFrame - Whether to render in wireframe mode
-	 * @property {boolean} showGlobe - Whether to show the base globe
-	 * @property {boolean} showLand - Whether to show land masses
-	 * @property {boolean} showLandIndices - Whether to show debug indices for land
-	 */
 	const [debugOptions, setDebugOptions] = useState({
 		wireFrame: false,
 		showGlobe: true,
@@ -63,12 +43,6 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		showLandIndices: false,
 	});
 
-	/**
-	 * Slider float values for controlling opacity of scene elements
-	 * @type {Object}
-	 * @property {number} globeOpacity - Opacity value for the base globe (0.0-1.0)
-	 * @property {number} landOpacity - Opacity value for land masses (0.0-1.0)
-	 */
 	const [sliderFloats, setSliderFloats] = useState({
 		globeOpacity: 1.0,
 		landOpacity: 1.0,
@@ -84,9 +58,6 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 			return;
 		}
 		
-		/**
-		 * Updates canvas dimensions when window is resized
-		 */
 		const handleResize = () => {
 			if (canvasRef.current) {
 				canvasRef.current.width = window.innerWidth;
@@ -100,6 +71,9 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		if (!sceneRef.current) {
 			setupGlobeScene(canvasRef.current).then((globeSceneManager) => {
 				sceneRef.current = globeSceneManager;
+
+				sceneRef.current.camera.addEventListener('zoom', (e) => {handleZoomChange(e.zoomLevel)});
+
 				sceneRef.current.startAnimationLoop();
 				setSceneLoaded(true);
 			});
@@ -112,10 +86,6 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		};
 	}, []);
 
-	/**
-	 * Updates the scene when debug options change
-	 * Controls visibility and rendering modes of globe elements
-	 */
 	useEffect(() => {
 		if (!sceneRef.current) return;
 		
@@ -128,10 +98,6 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		showLandIndices ? earth.showLandIndices() : earth.hideLandIndices();
 	}, [debugOptions]);
 
-	/**
-	 * Updates the opacity of scene elements when debug float values change
-	 * Controls transparency of the globe, land masses, and lakes
-	 */
 	useEffect(() => {
 		if (!sceneRef.current) return;
 
@@ -141,6 +107,16 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		earth.setGlobeOpacity(globeOpacity);
 		earth.setLandOpacity(landOpacity);
 	}, [sliderFloats]);
+
+	const handleZoomChange = (zoomLevel) => {
+		if (zoomLevel > 30.0) {
+			sceneRef.current?.earth.setScale(GLOBE.SCALES.S110M);
+		} else if (zoomLevel > 15.0) {
+			sceneRef.current?.earth.setScale(GLOBE.SCALES.S50M);
+		}  else {
+			sceneRef.current?.earth.setScale(GLOBE.SCALES.S10M);
+		}
+	}
 
 	return (
 		<>
@@ -162,7 +138,6 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				</div>
 			)}
 			
-			{/* Canvas for Three.js rendering */}
 			<canvas ref={canvasRef} style={{
 				width: '100%',
 				height: '100%',

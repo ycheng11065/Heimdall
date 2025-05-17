@@ -1,7 +1,23 @@
-
+import { GLOBE } from "../three/constants";
 // TEMPORARY until getting it to backend
-export async function fetchGeoJSON(file_name) {
+
+export async function fetchLandGeoJSON(scale) {
     try {
+        let file_name;
+        switch (scale) {
+            case GLOBE.SCALES.S110M:
+                file_name = 'ne_110m_land';
+                break;
+            case GLOBE.SCALES.S50M:
+                file_name = 'ne_50m_land';
+                break;
+            case GLOBE.SCALES.S10M:
+                file_name = 'ne_10m_land';
+                break;
+            default:
+                throw new Error('Invalid scale provided');
+        }
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 

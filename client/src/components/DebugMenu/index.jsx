@@ -28,18 +28,11 @@ const DebugMenu = ({ debugOptions, setDebugOptions, sliderFloats, setSliderFloat
 	const [cameraZoom, setCameraZoom] = useState(camera.zoom);
 
 	camera.addEventListener("zoom", (e) => {
-		setCameraZoom(e.zoom);
+		setCameraZoom(e.zoomLevel);
 	});
 
-	/**
-	 * Toggles the visibility state of the debug menu
-	 */
 	const toggleMenu = () => setIsOpen(!isOpen);
 	
-	/**
-	 * Toggles the value of a specific debug option
-	 * @param {string} optionName - The name of the option to toggle
-	 */
 	const toggleOption = (optionName) => {
 		setDebugOptions({
 			...debugOptions,
@@ -47,11 +40,6 @@ const DebugMenu = ({ debugOptions, setDebugOptions, sliderFloats, setSliderFloat
 		});
 	};
 	
-	/**
-	 * Updates a slider value in the debugFloats state
-	 * @param {Event} e - The change event from the slider input
-	 * @param {string} optionName - The name of the float option to update
-	 */
 	const handleSliderChange = (e, optionName) => {
 		setSliderFloats({
 			...sliderFloats,
@@ -59,11 +47,6 @@ const DebugMenu = ({ debugOptions, setDebugOptions, sliderFloats, setSliderFloat
 		});
 	};
 	
-	/**
-	 * Formats a camelCase string to Title Case with spaces
-	 * @param {string} str - The camelCase string to format
-	 * @returns {string} The formatted string with spaces and proper capitalization
-	 */
 	const formatLabel = (str) => str.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
 	
 	return (
@@ -76,6 +59,7 @@ const DebugMenu = ({ debugOptions, setDebugOptions, sliderFloats, setSliderFloat
 			{/* Debug Menu Panel */}
 			{isOpen && (
 				<div className="debug-panel">
+					
 					{/* Toggle options section */}
 					<div className="debug-section">
 						<h3 className="debug-heading">Debug Options</h3>

@@ -78,7 +78,7 @@ class GlobeCamera extends THREE.PerspectiveCamera {
         if (this.zoom !== this._previousZoom) {
             this._previousZoom = this.zoom;
 
-            const zoomEvent = { type: 'zoom', zoom: this.zoom };
+            const zoomEvent = { type: 'zoom', zoomLevel: this.zoom };
             this.eventDispatcher.dispatchEvent(zoomEvent);
 
             this._previousZoom = this.zoom;
