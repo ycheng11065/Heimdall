@@ -28,3 +28,7 @@ export const GLOBE = {
     SEGMENTS: 64,
     COLOR: 0x14b1d9,
 };
+
+export const EARTH = {
+    MEAN_RADIUS: 6371
+}

@@ -36,51 +36,26 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 	const [sceneReady, setSceneReady] = useState(false);
 
 	const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-	/**
-	 * Reference to the canvas DOM element where Three.js renders
-	 * @type {React.RefObject<HTMLCanvasElement>}
-	 */
 	const canvasRef = useRef(null);
-	
-	/**
-	 * Reference to the globe scene manager instance
-	 * @type {React.RefObject<Object>}
-	 */
 	const sceneRef = useRef(null);
 	
-	/**
-	 * Debug options state for controlling scene features
-	 * @type {Object}
-	 * @property {boolean} wireFrame - Whether to render in wireframe mode
-	 * @property {boolean} showGlobe - Whether to show the base globe
-	 * @property {boolean} showLand - Whether to show land masses
-	 * @property {boolean} showLandIndices - Whether to show debug indices for land
-	 * @property {boolean} showLakes - Whether to show lakes
-	 * @property {boolean} showLakeIndices - Whether to show debug indices for lakes
-	 */
 	const [debugOptions, setDebugOptions] = useState({
 		wireFrame: false,
 		showGlobe: true,
 		showLand: true,
 		showLandIndices: false,
 		showLakes: true,
-		showLakeIndices: false
+		showLakeIndices: false,
+		showGlobeAxes: false,
 	});
 
-	/**
-	 * Debug float values for controlling opacity of scene elements
-	 * @type {Object}
-	 * @property {number} globeOpacity - Opacity value for the base globe (0.0-1.0)
-	 * @property {number} landOpacity - Opacity value for land masses (0.0-1.0)
-	 * @property {number} lakesOpacity - Opacity value for lakes (0.0-1.0)
-	 */
 	const [debugFloats, setDebugFloats] = useState({
 		globeOpacity: 1.0,
 		landOpacity: 1.0,
 		lakesOpacity: 1.0
 	});
 
+	// TODO
 	useEffect(() => {
 		function handleMouseMove(event) {
 			setMousePos({ x: event.clientX, y: event.clientY });
@@ -90,19 +65,13 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		return () => window.removeEventListener('mousemove', handleMouseMove);
 	}, []);
 
-	/**
-	 * Initialize the Three.js scene when the component mounts
-	 * Sets up the canvas, handles window resizing, and manages the animation loop
-	 */
+
 	useEffect(() => {
 		if (!canvasRef.current) {
 			console.error('Canvas element not found');
 			return;
 		}
 		
-		/**
-		 * Updates canvas dimensions when window is resized
-		 */
 		const handleResize = () => {
 			if (canvasRef.current) {
 				canvasRef.current.width = window.innerWidth;
@@ -147,7 +116,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		if (!sceneRef.current) return;
 		
 		const earth = sceneRef.current.earth;
-		const { wireFrame, showGlobe, showLand, showLandIndices, showLakes, showLakeIndices } = debugOptions;
+		const { wireFrame, showGlobe, showLand, showLandIndices, showLakes, showLakeIndices, showGlobeAxes } = debugOptions;
 		
 		wireFrame ? earth.useWireframe() : earth.useSolid();
 		showGlobe ? earth.showGlobe() : earth.hideGlobe();
@@ -155,6 +124,15 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		showLakes ? earth.showLakes() : earth.hideLakes();
 		showLandIndices ? earth.showLandIndices() : earth.hideLandIndices();
 		showLakeIndices ? earth.showLakeIndices() : earth.hideLakeIndices();
+		
+		if (showGlobeAxes) {
+			earth.showDots();
+			earth.showAxes();
+		} else {
+			earth.hideDots();
+			earth.hideAxes();
+		}
+
 	}, [debugOptions]);
 
 	/**
@@ -174,7 +152,12 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 
 	return (
 		<>
-			{/* Debug menu - conditionally rendered based on enableDebugMenu prop */}
+			<canvas ref={canvasRef} style={{
+					width: '100%',
+					height: '100%',
+					display: 'block'
+			}} />
+
 			{enableDebugMenu && (
 				<div style={{
 					position: 'absolute',
@@ -190,14 +173,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 					/>
 				</div>
 			)}
-			
-			{/* Canvas for Three.js rendering */}
-			<canvas ref={canvasRef} style={{
-				width: '100%',
-				height: '100%',
-				display: 'block'
-			}} />
-			
+
 			{sceneReady && sceneRef.current?.satelliteManager && (
 				<div style={{
 					position: 'absolute',
@@ -209,7 +185,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				</div>
 			)}
 
-			{sceneReady && sceneRef.current?.hoveredSatellite && (
+			{/* {sceneReady && sceneRef.current?.hoveredSatellite && (
 				<div style={{
 					position: 'absolute',
 					left: mousePos.x + 12 + 'px',
@@ -225,7 +201,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 					Name: {sceneRef.current.hoveredSatellite.objectName}<br />
 					ID: {sceneRef.current.hoveredSatellite.noradCatId}<br />
 				</div>
-			)}
+			)} */}
 
 			{sceneReady && sceneRef.current?.selectedSatellite && (
 				<div style={{

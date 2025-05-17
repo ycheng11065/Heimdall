@@ -1,22 +1,18 @@
 // src/three/helper/satellite.js
 import * as THREE from 'three';
-import { GLOBE } from '../constants.js';
+import { GLOBE, EARTH } from '../constants.js';
 
-export function createSatelliteMesh(satelliteDTO, positionKm, color = 0xff0000) {
-	const scale = GLOBE.RADIUS / 6371;
+export function createSatelliteMesh(satelliteDTO, position, color = 0xff0000) {
+	const scale = GLOBE.RADIUS / EARTH.MEAN_RADIUS;
 
 	const geometry = new THREE.SphereGeometry(0.1, 8, 8);
 	const material = new THREE.MeshBasicMaterial({ color });
 	const mesh = new THREE.Mesh(geometry, material);
 
-	mesh.position.set(
-		positionKm[0] * scale,
-		positionKm[1] * scale,
-		positionKm[2] * scale
-	);
+	setSatellitePosition(mesh, position)
 
-	// console.log(satelliteDTO.noradCatId);
 
+	// TODO: CHANGE
 	mesh.userData = {
 		noradCatId: satelliteDTO.noradCatId,
         objectName: satelliteDTO.objectName,
@@ -27,10 +23,20 @@ export function createSatelliteMesh(satelliteDTO, positionKm, color = 0xff0000) 
         epoch: satelliteDTO.epoch,
         tleLine1: satelliteDTO.tleLine1,
         tleLine2: satelliteDTO.tleLine2,
-		x: positionKm[0] * scale,
-		y: positionKm[1] * scale,
-		z: positionKm[2] * scale
+		x: position[0] * scale,
+		y: position[1] * scale,
+		z: position[2] * scale
 	}
 
 	return mesh;
+}
+
+export function setSatellitePosition(mesh, position) {
+	const scale = GLOBE.RADIUS / EARTH.MEAN_RADIUS;
+
+	mesh.position.set(
+		position[0] * scale,
+		position[1] * scale,
+		position[2] * scale
+	);
 }

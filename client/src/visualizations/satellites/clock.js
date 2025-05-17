@@ -1,24 +1,24 @@
 class ClockManager {
     constructor(speedMultiplier = 30) {
         this.speedMultiplier = speedMultiplier;
-        this.simulatedTimeMs = Date.now(); // start at real clock
-        this.previousRealTimeMs = Date.now();
+        this.simulatedTime = Date.now(); 
+        this.previousRealTime = Date.now();
     }
 
     update() {
-        const nowRealTimeMs = Date.now();
-        const deltaRealMs = nowRealTimeMs - this.previousRealTimeMs;
-        this.previousRealTimeMs = nowRealTimeMs;
+        const nowRealTime = Date.now();
+        const deltaReal = nowRealTime - this.previousRealTime;
+        this.previousRealTime = nowRealTime;
 
-        this.simulatedTimeMs += deltaRealMs * this.speedMultiplier;
+        this.simulatedTime += deltaReal * this.speedMultiplier;
     }
 
-    getSimulatedMinutesSince(epochMs) {
-        return (this.simulatedTimeMs - epochMs) / 1000 / 60;
+    getSimulatedMinutesSince(epoch) {
+        return (this.simulatedTime - epoch) / 1000 / 60;
     }
 
     getSimulatedDate() {
-        return new Date(this.simulatedTimeMs);
+        return new Date(this.simulatedTime);
     }
 
     setSpeed(multiplier) {

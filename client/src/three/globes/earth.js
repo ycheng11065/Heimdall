@@ -12,7 +12,7 @@
  */
 import Globe from "./globe";
 import { fetchGeoJSON } from "../../api/geography";
-import { GEO_FEATURE } from "../constants";
+import { GLOBE, EARTH, GEO_FEATURE } from "../constants";
 import { generateGeoPolygonMeshes, generateShapeIndices } from "../geometry/globeGeoRenderers";
 import * as THREE from "three";
 import { disposeGroup } from "../helper/disposal.js";
@@ -71,6 +71,9 @@ class Earth extends Globe {
 	 * @private
 	 */
 	_init() {
+		this._addTestAxes();
+		this._addTestMarkers();
+
 		this.textureContainer.add(this.getGlobeMesh());
 		this._initLand();
 		this._initLakes();
@@ -261,6 +264,85 @@ class Earth extends Globe {
 		this.lakeMeshes = null;
 		this.landIndices = null;
 		this.lakeIndices = null;
+	}
+
+	showDots() {
+		this.dots.forEach(dot => {
+			dot.visible = true;
+		});
+	}
+
+	hideDots() {
+		this.dots.forEach(dot => {
+			dot.visible = false;
+		});
+	}
+
+	_addTestMarkers() {
+		const pointGeom = new THREE.SphereGeometry(GLOBE.RADIUS * 0.02, 8, 8);
+		const yellowMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+		const positions = [
+			[  0,   0],  // lat=0, lon=0
+			[  0,  90],  // lat=0, lon=90E
+			[ 90,   0],  // North pole
+		];
+		const scale = GLOBE.RADIUS/EARTH.MEAN_RADIUS;
+		this.dots = [];
+		
+		for (const [lat, lon] of positions) {
+			const φ = THREE.MathUtils.degToRad(lat);
+			const λ = THREE.MathUtils.degToRad(lon);
+			
+			const x = EARTH.MEAN_RADIUS * Math.cos(φ) * Math.cos(λ);
+			const y = EARTH.MEAN_RADIUS * Math.cos(φ) * Math.sin(λ);
+			const z = EARTH.MEAN_RADIUS * Math.sin(φ);
+		
+			const dot = new THREE.Mesh(pointGeom, yellowMat);
+			dot.position.set(
+			x * scale,
+			y * scale,
+			z * scale
+			);
+
+			dot.visible = false;
+			this.scene.add(dot);
+			this.dots.push(dot);
+		}
+	}
+
+	showAxes() {
+		this.arrowX.visible = true;
+		this.arrowY.visible = true;
+		this.arrowZ.visible = true;
+	}
+
+	hideAxes() {
+		this.arrowX.visible = false;
+		this.arrowY.visible = false;
+		this.arrowZ.visible = false;
+	}
+
+	_addTestAxes() {
+		const len = GLOBE.RADIUS * 1.2;
+		this.arrowX = new THREE.ArrowHelper(
+			new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), len, 0xff0000
+		);
+
+		this.arrowY = new THREE.ArrowHelper(
+			new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), len, 0x0000ff
+		)
+
+		this.arrowZ = new THREE.ArrowHelper(
+			new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), len, 0x00ff00
+		)
+
+		this.arrowX.visible = false;
+		this.arrowY.visible = false;
+		this.arrowZ.visible = false;
+
+		this.scene.add(this.arrowX);
+		this.scene.add(this.arrowY);
+		this.scene.add(this.arrowZ);
 	}
 }
 
