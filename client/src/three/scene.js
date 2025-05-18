@@ -95,54 +95,52 @@ class GlobeSceneManager {
 
 		this.satelliteManager = new SatelliteManager(this.scene);
 
-		// this._addTestAxes();
-		// this._addTestMarkers();
-
-		// this.canvas.addEventListener('mousemove', (event) => {
-		// 	const rect = this.canvas.getBoundingClientRect();
-		// 	this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-		// 	this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-		// });
-
 		this.canvas.addEventListener('click', (event) => {
-			const rect = this.canvas.getBoundingClientRect();
-			const mouse = new THREE.Vector2(
-				((event.clientX - rect.left) / rect.width) * 2 - 1,
-				-((event.clientY - rect.top) / rect.height) * 2 + 1
-			);
-		
-			this.raycaster.setFromCamera(mouse, this.camera);
-		
-			if (this.satelliteManager && this.satelliteManager.satellites.length > 0) {
-				const meshes = this.satelliteManager.satellites.map(sat => sat.mesh);
-				const intersects = this.raycaster.intersectObjects(meshes);
-		
-				if (intersects.length > 0) {
-					const clickedMesh = intersects[0].object;
-		
-					// Deselect previous selection
-					if (this.selectedMesh && this.selectedMesh !== clickedMesh) {
-						this.selectedMesh.material.color.set(0xff0000);
-						this.selectedMesh.scale.set(1, 1, 1);
-					}
-		
-					// Select new satellite
-					clickedMesh.material.color.set(0xffa500); // green highlight for selected
-					clickedMesh.scale.set(2, 2, 2); // make it even bigger
-		
-					this.selectedSatellite = clickedMesh.userData;
-					this.selectedMesh = clickedMesh;
-				} else {
-					// Clicked on empty space
-					if (this.selectedMesh) {
-						this.selectedMesh.material.color.set(0xff0000);
-						this.selectedMesh.scale.set(1, 1, 1);
-					}
-					this.selectedSatellite = null;
-					this.selectedMesh = null;
-				}
-			}
+			this.selectSatellite(event);
 		});
+	}
+
+	selectSatellite(event) {
+		const rect = this.canvas.getBoundingClientRect();
+		const mouse = new THREE.Vector2(
+			((event.clientX - rect.left) / rect.width) * 2 - 1,
+			-((event.clientY - rect.top) / rect.height) * 2 + 1
+		);
+	
+		this.raycaster.setFromCamera(mouse, this.camera);
+	
+		if (this.satelliteManager && this.satelliteManager.satellites.length > 0) {
+			const meshes = this.satelliteManager.satellites.map(sat => sat.mesh);
+			const intersects = this.raycaster.intersectObjects(meshes);
+	
+			if (intersects.length > 0) {
+				const clickedMesh = intersects[0].object;
+	
+				// Deselect previous selection
+				if (this.selectedMesh && this.selectedMesh !== clickedMesh) {
+					this.resetClickedMesh();
+				}
+	
+				// Select new satellite
+				clickedMesh.material.color.set(0xffa500); // green highlight for selected
+				clickedMesh.scale.set(2, 2, 2); // make it even bigger
+	
+				this.selectedSatellite = clickedMesh.userData;
+				this.selectedMesh = clickedMesh;
+			} else {
+				// Clicked on empty space
+				if (this.selectedMesh) {
+					this.resetClickedMesh();
+				}
+				this.selectedSatellite = null;
+				this.selectedMesh = null;
+			}
+		}
+	}
+
+	resetClickedMesh() {
+		this.selectedMesh.material.color.set(0xff0000);
+		this.selectedMesh.scale.set(1, 1, 1);
 	}
 
 	addUpdateCallback(cb) {
@@ -158,44 +156,6 @@ class GlobeSceneManager {
 		for (const cb of this.updateCallbacks) {
             cb();
         }
-
-		this.raycaster.setFromCamera(this.mouse, this.camera);
-
-		if (this.satelliteManager && this.satelliteManager.satellites.length > 0) {
-			const meshes = this.satelliteManager.satellites.map(sat => sat.mesh);
-			const intersects = this.raycaster.intersectObjects(meshes);
-
-			if (intersects.length > 0) {
-				const hitMesh = intersects[0].object;
-
-				// If hovering a new satellite
-				if (this.currentHoveredMesh !== hitMesh) {
-					// Reset previous hovered satellite if any
-					if (this.currentHoveredMesh) {
-						this.currentHoveredMesh.material.color.set(0xff0000); // back to normal red
-						this.currentHoveredMesh.scale.set(1, 1, 1); // back to normal size
-					}
-
-					// Highlight the newly hovered one
-					hitMesh.material.color.set(0xffff00); // highlight yellow
-					hitMesh.scale.set(1.5, 1.5, 1.5); // 1.5x bigger
-
-					this.currentHoveredMesh = hitMesh;
-				}
-
-				this.hoveredSatellite = hitMesh.userData;
-			} else {
-				// No satellite hovered
-				if (this.currentHoveredMesh) {
-					this.currentHoveredMesh.material.color.set(0xff0000); // reset color
-					this.currentHoveredMesh.scale.set(1, 1, 1); // reset size
-					this.currentHoveredMesh = null;
-				}
-
-				this.hoveredSatellite = null;
-			}
-		}
-
 
 		this.renderer.render(this.scene, this.camera);
         this.camera.update();

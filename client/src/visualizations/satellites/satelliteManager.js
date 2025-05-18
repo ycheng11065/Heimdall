@@ -13,7 +13,6 @@ class SatelliteManager {
     }
 
     async addSatellite(satelliteDTO) {
-        // console.log(satelliteDTO);
         const now = new Date();
         const epoch = Date.parse(satelliteDTO.epoch); 
         
