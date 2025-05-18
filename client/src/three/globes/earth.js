@@ -34,11 +34,16 @@ class Earth extends Globe {
 		this.scale = scale;
 		this.scene = scene;
 
+		this.isLandVisible = true;
+		this.isLandIndicesVisible = false;
+
 		this.landMeshes110m = new THREE.Group();
 		this.landMeshes50m = new THREE.Group();
 		this.landMeshes10m = new THREE.Group();
 
-		this.landIndices = new THREE.Group();
+		this.landIndices110m = new THREE.Group();
+		this.landIndices50m = new THREE.Group();
+		this.landIndices10m = new THREE.Group();
 
 		this._init();
 	}
@@ -52,37 +57,31 @@ class Earth extends Globe {
 		this._initLand(); 
 	}
 
-	/**
-	 * Loads and initializes land mass geometries from GeoJSON data
-	 * @private
-	 */
+	// TODO: Can do better with code reuse using multiple workers. Lots of code waste here
 	async _initLand() {
+		this._initLandScale(GLOBE.SCALES.S110M);
+		this._initLandScale(GLOBE.SCALES.S50M);
+		this._initLandScale(GLOBE.SCALES.S10M);
+	}
 
-		// Load 110m land meshes
-		try {
-			const geojson = await fetchLandGeoJSON(this.scale);
-
-			const geoWorker = new Worker(new URL('../geometry/geoWorker.js', import.meta.url), { type: 'module' });
-
-			geoWorker.postMessage({
-				command: GEOWORKER_COMMANDS.GEN_MESH,
-				data: {
-					geojson: geojson,
-					geoFeature: GEO_FEATURE.LAND
-				}
-			});
-
-			geoWorker.onmessage = (e) => {
-				console.log("Land meshes 1:110m loaded");
-				this.deserializeLandMeshes(e.data.meshes, this.landMeshes110m, true);
-			}
-		} catch (error) {
-			console.error('Error processing GeoJSON:', error);
+	async _initLandScale(scale) {
+		let landMeshes;
+		switch (scale) {
+			case GLOBE.SCALES.S110M:
+				landMeshes = this.landMeshes110m;
+				break;
+			case GLOBE.SCALES.S50M:
+				landMeshes = this.landMeshes50m;
+				break;
+			case GLOBE.SCALES.S10M:
+				landMeshes = this.landMeshes10m;
+				break;
+			default:
+				console.warn("Invalid scale for land meshes");
 		}
 
-		// Load 50m land meshes
 		try {
-			const geojson = await fetchLandGeoJSON(GLOBE.SCALES.S50M);
+			const geojson = await fetchLandGeoJSON(scale);
 			
 			const geoWorker = new Worker(new URL('../geometry/geoWorker.js', import.meta.url), { type: 'module' });
 
@@ -95,35 +94,19 @@ class Earth extends Globe {
 			});
 
 			geoWorker.onmessage = (e) => {
-				console.log("Land meshes 1:50m loaded");
-				this.deserializeLandMeshes(e.data.meshes, this.landMeshes50m, false);
-			}
-		} catch (error) {
-			console.error('Error processing GeoJSON:', error);
-		}
+				this._deserializeLandMeshes(e.data.meshes, landMeshes, false);
 
-		// Load 10m meshes
-		try {
-			const geojson = await fetchLandGeoJSON(GLOBE.SCALES.S10M);
-			
-			const geoWorker = new Worker(new URL('../geometry/geoWorker.js', import.meta.url), { type: 'module' });
-			
-			geoWorker.postMessage({
-				command: GEOWORKER_COMMANDS.GEN_MESH,
-				data: {
-					geojson: geojson,
-					geoFeature: GEO_FEATURE.LAND
+				if (scale === this.scale) {
+					landMeshes.visible = this.isLandVisible;
 				}
-			});
-
-			geoWorker.onmessage = (e) => {
-				console.log("Land meshes 1:10m loaded");
-				this.deserializeLandMeshes(e.data.meshes, this.landMeshes10m, false);
+				
+				console.log(`Land meshes ${scale} loaded`);
 			}
 		} catch (error) {
 			console.error('Error processing GeoJSON:', error);
 		}
 	}
+
 	/**
 	 * Sets the scale of the globe and updates visibility of land meshes
 	 * @param {number} scale - The scale to set (e.g., GLOBE.SCALES.S110M, GLOBE.SCALES.S50M, GLOBE.SCALES.S10M)
@@ -131,9 +114,16 @@ class Earth extends Globe {
 	setScale(scale) {
 		if (this.scale !== scale) {
 			this.scale = scale;
-			this.landMeshes110m.visible = scale === GLOBE.SCALES.S110M;
-			this.landMeshes50m.visible = scale === GLOBE.SCALES.S50M;
-			this.landMeshes10m.visible = scale === GLOBE.SCALES.S10M;
+			this.landMeshes110m.visible = scale === GLOBE.SCALES.S110M && this.isLandVisible;
+			this.landMeshes50m.visible = scale === GLOBE.SCALES.S50M && this.isLandVisible;
+			this.landMeshes10m.visible = scale === GLOBE.SCALES.S10M && this.isLandVisible;
+
+			if (this.isLandIndicesVisible) {
+				this.showLandIndices();
+			}
+			this.landIndices110m.visible = scale === GLOBE.SCALES.S110M && this.isLandIndicesVisible;
+			this.landIndices50m.visible = scale === GLOBE.SCALES.S50M && this.isLandIndicesVisible;
+			this.landIndices10m.visible = scale === GLOBE.SCALES.S10M && this.isLandIndicesVisible;
 		}
 	}
 
@@ -144,7 +134,7 @@ class Earth extends Globe {
 	 * @param {boolean} isVisible - Whether the land meshes should be visible
 	 * @private
 	 * */
-	deserializeLandMeshes(landMeshes, landMeshGroup, isVisible) {
+	_deserializeLandMeshes(landMeshes, landMeshGroup, isVisible) {
 		landMeshes.forEach(mesh => {
 			const geometry = new THREE.BufferGeometry();
 			geometry.setAttribute('position', new THREE.Float32BufferAttribute(mesh.geometry.positionArray, 3));
@@ -175,30 +165,55 @@ class Earth extends Globe {
 	 * @private
 	 */
 	_generateLandIndices() {
-		this.landMeshes.children.forEach(mesh => {
+		let landMeshes, landIndices;
+		switch (this.scale) {
+			case GLOBE.SCALES.S110M:
+				landMeshes = this.landMeshes110m;
+				landIndices = this.landIndices110m;
+				break;
+			case GLOBE.SCALES.S50M:
+				landMeshes = this.landMeshes50m;
+				landIndices = this.landIndices50m;
+				break;
+			case GLOBE.SCALES.S10M:
+				landMeshes = this.landMeshes10m;
+				landIndices = this.landIndices10m;
+				break;
+			default:
+				console.warn("Invalid scale for land indices");
+				return;
+		}
+
+		landMeshes.children.forEach(mesh => {
 			const indices = generateShapeIndices(mesh.geometry);
 			indices.forEach(index => {
-				this.landIndices.add(index);
+				landIndices.add(index);
 			});
 		});
 
-		this.landIndices.name = "LandIndices";
-		this.landIndices.visible = false;
-		this.scene.add(this.landIndices);
+		landIndices.name = "LandIndices";
+		landIndices.visible = false;
+		this.scene.add(landIndices);
 	}
 
 	/**
 	 * Makes land masses visible
 	 */
 	showLand() {
-		this.landMeshes.visible = true;
+		this.isLandVisible = true;
+		this.landMeshes110m.visible = this.scale === GLOBE.SCALES.S110M;
+		this.landMeshes50m.visible = this.scale === GLOBE.SCALES.S50M;
+		this.landMeshes10m.visible = this.scale === GLOBE.SCALES.S10M;
 	}
 
 	/**
 	 * Hides land masses
 	 */
 	hideLand() {
-		this.landMeshes.visible = false;
+		this.isLandVisible = false;
+		this.landMeshes110m.visible = false;
+		this.landMeshes50m.visible = false;
+		this.landMeshes10m.visible = false;
 	}
 
 	/**
@@ -206,12 +221,34 @@ class Earth extends Globe {
 	 * @param {number} opacity - The opacity value (0.0-1.0)
 	 */
 	setLandOpacity(opacity) {
-		this.landMeshes.traverse((child) => {
-			if (child.isMesh) {
-				child.material.opacity = opacity;
-				child.material.transparent = true;
-			}
-		});
+		switch (this.scale) {
+			case GLOBE.SCALES.S110M:
+				this.landMeshes110m.traverse((child) => {
+					if (child.isMesh) {
+						child.material.opacity = opacity;
+						child.material.transparent = true;
+					}
+				});
+				break;
+			case GLOBE.SCALES.S50M:
+				this.landMeshes50m.traverse((child) => {
+					if (child.isMesh) {
+						child.material.opacity = opacity;
+						child.material.transparent = true;
+					}
+				});
+				break;
+			case GLOBE.SCALES.S10M:
+				this.landMeshes10m.traverse((child) => {
+					if (child.isMesh) {
+						child.material.opacity = opacity;
+						child.material.transparent = true;
+					}
+				});
+				break;
+			default:
+				console.warn("Invalid scale for land opacity");
+		}
 	}
 
 	/**
@@ -219,18 +256,39 @@ class Earth extends Globe {
 	 * Generates indices if they don't exist yet
 	 */
 	showLandIndices() {
-		if (this.landIndices.children.length === 0) {
+		this.isLandIndicesVisible = true;
+
+		let landIndices;
+		switch (this.scale) {
+			case GLOBE.SCALES.S110M:
+				landIndices = this.landIndices110m;
+				break;
+			case GLOBE.SCALES.S50M:
+				landIndices = this.landIndices50m;
+				break;
+			case GLOBE.SCALES.S10M:
+				landIndices = this.landIndices10m;
+				break;
+			default:
+				console.warn("Invalid scale for land indices");
+				return;
+		}
+
+		if (landIndices.children.length === 0) {
 			this._generateLandIndices();
 		}
 
-		this.landIndices.visible = true;
+		landIndices.visible = true;
 	}
 
 	/**
 	 * Hides land vertex indices
 	 */
 	hideLandIndices() {
-		this.landIndices.visible = false;
+		this.isLandIndicesVisible = false;
+		this.landIndices110m.visible = false;
+		this.landIndices50m.visible = false;
+		this.landIndices10m.visible = false;
 	}
 
 	/**
@@ -243,11 +301,19 @@ class Earth extends Globe {
 		disposeGroup(this.landMeshes110m);
 		disposeGroup(this.landMeshes50m);
 		disposeGroup(this.landMeshes10m);
+
+		disposeGroup(this.landIndices110m);
+		disposeGroup(this.landIndices50m);
+		disposeGroup(this.landIndices10m);
+
 		disposeGroup(this.landIndices);
 
 		this.landMeshes110m = null;
 		this.landMeshes50m = null;
 		this.landMeshes10m = null;
+		this.landIndices110m = null;
+		this.landIndices50m = null;
+		this.landIndices10m = null;
 		this.landIndices = null;
 	}
 }
