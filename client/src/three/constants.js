@@ -28,3 +28,9 @@ export const GLOBE = {
     SEGMENTS: 64,
     COLOR: 0x14b1d9,
 };
+
+export const EARTH = {
+    MEAN_RADIUS: 6371,
+    EQUATORIAL_RADIUS: 6378.137,
+    POLAR_RADIUS: 6356.752
+}

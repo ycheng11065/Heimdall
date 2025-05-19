@@ -1,5 +1,6 @@
 package com.application.server.model.Satellite;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -9,7 +10,8 @@ public record SatelliteDTO(
         String countryCode,
         LocalDate launchDate,
         LocalDate decayDate,
-        LocalDateTime lastUpdate,
+        Instant lastUpdated,
+        Instant epoch,
         String tleLine1,
         String tleLine2
 ) {}

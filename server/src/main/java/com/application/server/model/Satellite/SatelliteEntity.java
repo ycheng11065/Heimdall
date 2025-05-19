@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -34,10 +35,10 @@ public class SatelliteEntity {
     private LocalDate decayDate; // Date the satellite decayed or deorbited (null if still active)
 
     @Column("epoch")
-    private LocalDateTime epoch; // Timestamp of the TLE data epoch (reference time for orbit)
+    private Instant epoch; // Timestamp of the TLE data epoch (reference time for orbit)
 
-    @Column("last_update")
-    private LocalDateTime lastUpdate; // Timestamp of the last update in the local database
+    @Column("last_updated")
+    private Instant lastUpdated; // Timestamp of the last update in the local database
 
     @Column("tle_line1")
     private String tleLine1; // First line of the satellite's TLE (Two-Line Element set)
@@ -91,11 +92,11 @@ public class SatelliteEntity {
         return decayDate;
     }
 
-    public LocalDateTime getLastUpdate() {
-        return lastUpdate;
+    public Instant getLastUpdated() {
+        return lastUpdated;
     }
 
-    public LocalDateTime getEpoch() {
+    public Instant getEpoch() {
         return epoch;
     }
 
@@ -163,7 +164,7 @@ public class SatelliteEntity {
         this.tleLine1 = tleLine1;
     }
 
-    public void setEpoch(LocalDateTime epoch) {
+    public void setEpoch(Instant epoch) {
         this.epoch = epoch;
     }
 
@@ -191,8 +192,8 @@ public class SatelliteEntity {
         this.noradCatId = noradCatId;
     }
 
-    public void setLastUpdate(LocalDateTime lastUpdate) {
-        this.lastUpdate = lastUpdate;
+    public void setLastUpdated(Instant lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     public void setId(UUID id) {

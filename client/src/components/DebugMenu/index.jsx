@@ -30,10 +30,6 @@ const DebugMenu = ({ debugOptions, setDebugOptions, debugFloats, setDebugFloats 
 	 */
 	const toggleMenu = () => setIsOpen(!isOpen);
 	
-	/**
-	 * Toggles the value of a specific debug option
-	 * @param {string} optionName - The name of the option to toggle
-	 */
 	const toggleOption = (optionName) => {
 		setDebugOptions({
 			...debugOptions,
@@ -41,11 +37,6 @@ const DebugMenu = ({ debugOptions, setDebugOptions, debugFloats, setDebugFloats 
 		});
 	};
 	
-	/**
-	 * Updates a slider value in the debugFloats state
-	 * @param {Event} e - The change event from the slider input
-	 * @param {string} optionName - The name of the float option to update
-	 */
 	const handleSliderChange = (e, optionName) => {
 		setDebugFloats({
 			...debugFloats,

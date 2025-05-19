@@ -6,7 +6,7 @@
  * @requires ../helper/disposal
  */
 import { SphereGeometry, MeshBasicMaterial, Mesh } from 'three';
-import { GLOBE } from '../constants';
+import { GLOBE, EARTH } from '../constants';
 import { disposeMaterial } from '../helper/disposal.js';
 
 /**
@@ -48,16 +48,24 @@ class Globe {
 		 * The 3D mesh representing the globe.
 		 * @type {Mesh}
 		 */
-		this.globeMesh = this._createGlobeMesh();
+	this.globeMesh = this._createGlobeMesh();
 	}
 
 	/**
-	 * Creates the sphere geometry for the globe.
-	 * @returns {SphereGeometry} The created sphere geometry.
+	 * Creates the globe as an ellipsoid.
+	 * @returns {SphereGeometry} The created ellipsoid geometry.
 	 * @private
 	 */
 	_createGeometry() {
-		const geometry = new SphereGeometry(this.radius, this.segments, this.segments);
+		const a = EARTH.EQUATORIAL_RADIUS;
+		const b = EARTH.POLAR_RADIUS;
+
+		const equatorialScale = GLOBE.RADIUS;
+		const polarScale = b / a * GLOBE.RADIUS;
+
+		const geometry = new SphereGeometry(1, 64, 64);
+		geometry.scale(equatorialScale, polarScale, equatorialScale);
+
 		return geometry;
 	}
 
@@ -69,6 +77,7 @@ class Globe {
 	_createGlobeMesh() {
 		let mesh = new Mesh(this.geometry, this.material);
 		mesh.name = "Globe";
+
 		return mesh;
 	}
 
