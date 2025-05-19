@@ -43,7 +43,6 @@ class Earth extends Globe {
 
 		this.landIndices110m = new THREE.Group();
 		this.landIndices50m = new THREE.Group();
-		this.landIndices10m = new THREE.Group();
 
 		this._init();
 	}
@@ -57,7 +56,6 @@ class Earth extends Globe {
 		this._initLand(); 
 	}
 
-	// TODO: Can do better with code reuse using multiple workers. Lots of code waste here
 	async _initLand() {
 		this._initLandScale(GLOBE.SCALES.S110M);
 		this._initLandScale(GLOBE.SCALES.S50M);
@@ -99,7 +97,7 @@ class Earth extends Globe {
 				if (scale === this.scale) {
 					landMeshes.visible = this.isLandVisible;
 				}
-				
+
 				console.log(`Land meshes ${scale} loaded`);
 			}
 		} catch (error) {
@@ -123,7 +121,6 @@ class Earth extends Globe {
 			}
 			this.landIndices110m.visible = scale === GLOBE.SCALES.S110M && this.isLandIndicesVisible;
 			this.landIndices50m.visible = scale === GLOBE.SCALES.S50M && this.isLandIndicesVisible;
-			this.landIndices10m.visible = scale === GLOBE.SCALES.S10M && this.isLandIndicesVisible;
 		}
 	}
 
@@ -176,8 +173,7 @@ class Earth extends Globe {
 				landIndices = this.landIndices50m;
 				break;
 			case GLOBE.SCALES.S10M:
-				landMeshes = this.landMeshes10m;
-				landIndices = this.landIndices10m;
+				console.warn("No land indices available for 10m scale");
 				break;
 			default:
 				console.warn("Invalid scale for land indices");
