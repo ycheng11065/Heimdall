@@ -54,7 +54,7 @@ pub fn generate_polygon_feature_mesh(geojson_feature: &str) -> Result<PolygonMes
 
     let geojson: GeoJson = geojson_feature.parse::<GeoJson>()
         .map_err(|err| format!("Failed to parse GeoJSON: {}", err))?;
-    
+
     let feature: Feature = Feature::try_from(geojson)
         .map_err(|err| format!("Failed to convert to Feature: {}", err))?;
 
