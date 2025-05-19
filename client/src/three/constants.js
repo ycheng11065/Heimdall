@@ -30,5 +30,7 @@ export const GLOBE = {
 };
 
 export const EARTH = {
-    MEAN_RADIUS: 6371
+    MEAN_RADIUS: 6371,
+    EQUATORIAL_RADIUS: 6378.137,
+    POLAR_RADIUS: 6356.752
 }
