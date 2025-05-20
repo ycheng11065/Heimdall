@@ -13,4 +13,7 @@ export default defineConfig({
 		wasm(),
 		topLevelAwait(),
 	],
+	server: {
+		port: 3000
+	}
 })
