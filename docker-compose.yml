@@ -6,8 +6,8 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      POSTGRES_USER: ${SPRING_R2DBC_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_R2DBC_PASSWORD}
     volumes:
       - postgres_db:/var/lib/postgresql/data
 
@@ -22,9 +22,12 @@ services:
     depends_on:
       - db
     environment:
-      SPRING_DATASOURCE_URL: r2dbc:postgresql://db:5432/postgres
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres123
+      DB_URL: r2dbc:postgresql://db:5432/postgres
+      DB_USERNAME: ${SPRING_R2DBC_USERNAME}
+      DB_PASSWORD: ${SPRING_R2DBC_PASSWORD}
+      SPACETRACK_USERNAME: ${SPACETRACK_USERNAME}
+      SPACETRACK_PASSWORD: ${SPACETRACK_PASSWORD}
+
 
   frontend:
     build:
