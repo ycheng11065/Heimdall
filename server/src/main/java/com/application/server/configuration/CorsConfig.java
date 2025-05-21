@@ -10,7 +10,8 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:3000"); // your frontend
+//        config.addAllowedOrigin("http://localhost:3000"); // your frontend
+        config.addAllowedOrigin("http://164.92.71.246:3000"); // your frontend
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true); // only if needed
