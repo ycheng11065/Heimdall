@@ -13,7 +13,7 @@ export async function fetchLandGeoJSON(scale) {
                 break;
             case GLOBE.SCALES.S10M:
                 file_name = 'ne_10m_land';
-                break;
+                break; 
             default:
                 throw new Error('Invalid scale provided');
         }
