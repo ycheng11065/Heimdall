@@ -1,7 +1,7 @@
 ![Procedurally curved Earth mesh with point-based continental generation](https://github.com/user-attachments/assets/2ec19871-0a8d-4f2e-8bbe-6ecc225d6ae5)
 *Procedurally curved Earth mesh with point-based continental generation*
 
-## Our Articles on the Project
+## Articles we wrote about the project
 - [From Coordinates to Continents: Creating a 3D Globe from 2D Coordinates](https://tricolor-albacore-d39.notion.site/From-Coordinates-to-Continents-Creating-a-3D-Globe-from-2D-Coordinates-1f83a2e4815d809b9606c3b5be791506?pvs=74)
 
 ## References & Acknowledgements
