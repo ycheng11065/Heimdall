@@ -13,6 +13,8 @@
 - [How to evenly distribute points on a sphere more effectively than the canonical Fibonacci Lattice](https://extremelearning.com.au/how-to-evenly-distribute-points-on-a-sphere-more-effectively-than-the-canonical-fibonacci-lattice/) - Martin Roberts
 
 - [Sutherland–Hodgman Clipping](https://observablehq.com/@mbostock/sutherland-hodgman-clipping) - Mike Bostock
+  
+- [Weiler & Atherton Polygon Clipping](https://www.slideshare.net/slideshow/weiler-atherton/231048212) - Arvind Kumar
 
 ---
 
