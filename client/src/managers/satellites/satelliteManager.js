@@ -31,8 +31,13 @@ class SatelliteManager {
 
         const position = [ecf.y, ecf.z, ecf.x];
 
+        const geodetic = satellite.eciToGeodetic(eci.position, gmst);
+        const latitude = satellite.degreesLat(geodetic.latitude);
+        const longitude = satellite.degreesLong(geodetic.longitude);
+        const altitude = geodetic.height;
 
-        const satelliteMesh = createSatelliteMesh(satelliteDTO, position);
+
+        const satelliteMesh = createSatelliteMesh(satelliteDTO, position, latitude, longitude, altitude);
         this.scene.add(satelliteMesh);
 
         this.satellites.push({
@@ -76,7 +81,12 @@ class SatelliteManager {
             const gmst = satellite.gstime(this.clock.getSimulatedDate());
             const ecf  = satellite.eciToEcf(eci.position, gmst);
 
-            setSatellitePosition(sat.mesh, [ecf.y, ecf.z, ecf.x]);
+            const geodetic = satellite.eciToGeodetic(eci.position, gmst);
+            const latitude = satellite.degreesLat(geodetic.latitude);
+            const longitude = satellite.degreesLong(geodetic.longitude);
+            const altitude = geodetic.height;
+
+            setSatellitePosition(sat.mesh, [ecf.y, ecf.z, ecf.x], sat, latitude, longitude, altitude);
         }
     }
 

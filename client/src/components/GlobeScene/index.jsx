@@ -11,7 +11,8 @@ import { setupGlobeScene } from '../../three/globeSceneCore.js';
 import DebugMenu from '../DebugMenu/index.jsx';
 import { fetchSatellitesByType } from '../../api/satellite.js';
 // import { updateSatellites } from '../../visualizations/satellites/satelliteManager.js';
-import SpeedControl from './speedControl.jsx';
+import SpeedControl from '../SpeedControl/index.jsx';
+import SatelliteInfoBox from '../SatelliteInfoBox/index.jsx';
 
 /**
  * A React component that renders a Three.js scene with a 3D globe.
@@ -35,9 +36,11 @@ import SpeedControl from './speedControl.jsx';
 const GlobeScene = ({ enableDebugMenu = false }) => {
 	const [sceneReady, setSceneReady] = useState(false);
 
-	const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 	const canvasRef = useRef(null);
 	const sceneRef = useRef(null);
+
+	const selectedSatelliteRef = useRef(null);
+	const [selectedSatelliteData, setSelectedSatelliteData] = useState(null);
 	
 	const [debugOptions, setDebugOptions] = useState({
 		wireFrame: false,
@@ -55,16 +58,6 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		lakesOpacity: 1.0
 	});
 
-	// TODO
-	useEffect(() => {
-		function handleMouseMove(event) {
-			setMousePos({ x: event.clientX, y: event.clientY });
-		}
-	
-		window.addEventListener('mousemove', handleMouseMove);
-		return () => window.removeEventListener('mousemove', handleMouseMove);
-	}, []);
-
 
 	useEffect(() => {
 		if (!canvasRef.current) {
@@ -81,9 +74,11 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		
 		window.addEventListener('resize', handleResize);
 		handleResize();
-		
+
 		if (!sceneRef.current) {
-			setupGlobeScene(canvasRef.current).then(async (globeSceneManager) => {
+			setupGlobeScene(canvasRef.current, (mesh) => {
+				selectedSatelliteRef.current = mesh;
+			}).then(async (globeSceneManager) => {
 				sceneRef.current = globeSceneManager;
 				sceneRef.current.startAnimationLoop();
 
@@ -100,11 +95,41 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				setSceneReady(true);
 			});
 		}
+
+		const interval = setInterval(() => {
+			const mesh = selectedSatelliteRef.current;
+			if (!mesh || !mesh.userData) {
+				setSelectedSatelliteData(null);
+				return;
+			}
+
+			const d = mesh.userData;
+			const data = {
+				objectName: d.objectName,
+				noradCatId: d.noradCatId,
+				countryCode: d.countryCode,
+				launchDate: d.launchDate,
+				decayDate: d.decayDate,
+				lastUpdated: d.lastUpdated,
+				x: d.x.toFixed(2),
+				y: d.y.toFixed(2),
+				z: d.z.toFixed(2),
+				latitude: d.latitude.toFixed(4),
+				longitude: d.longitude.toFixed(4),
+				altitude: d.altitude.toFixed(2),
+			};
+
+			setSelectedSatelliteData(prev => {
+				const hasChanged = !prev || Object.keys(data).some(k => prev[k] !== data[k]);
+				return hasChanged ? data : prev;
+			});
+		}, 100);
 		
 		return () => {
 			window.removeEventListener('resize', handleResize);
 			sceneRef.current?.stopAnimationLoop();
 			sceneRef.current?.dispose();
+			clearInterval(interval);
 		};
 	}, []);
 
@@ -185,25 +210,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				</div>
 			)}
 
-			{/* {sceneReady && sceneRef.current?.hoveredSatellite && (
-				<div style={{
-					position: 'absolute',
-					left: mousePos.x + 12 + 'px',
-					top: mousePos.y + 12 + 'px',
-					background: 'rgba(0, 0, 0, 0.7)',
-					color: 'white',
-					padding: '6px 8px',
-					borderRadius: '4px',
-					pointerEvents: 'none',
-					fontSize: '12px',
-					zIndex: 100
-				}}>
-					Name: {sceneRef.current.hoveredSatellite.objectName}<br />
-					ID: {sceneRef.current.hoveredSatellite.noradCatId}<br />
-				</div>
-			)} */}
-
-			{sceneReady && sceneRef.current?.selectedSatellite && (
+			{sceneReady && selectedSatelliteData && (
 				<div style={{
 					position: 'absolute',
 					bottom: '16px',
@@ -214,16 +221,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 					borderRadius: '4px',
 					zIndex: 20
 				}}>
-					<h4>Selected Satellite</h4>
-					<b>{sceneRef.current.selectedSatellite.objectName}</b><br />
-					NORAD ID: {sceneRef.current.selectedSatellite.noradCatId}<br />
-					Country: {sceneRef.current.selectedSatellite.countryCode}<br />
-					Launch Date: {sceneRef.current.selectedSatellite.launchDate}<br />
-					Decay Date: {sceneRef.current.selectedSatellite.decayDate}<br />
-					Last Updated: {sceneRef.current.selectedSatellite.lastUpdated}<br />
-					X: {sceneRef.current.selectedSatellite.x}<br />
-					Y: {sceneRef.current.selectedSatellite.y}<br />
-					Z: {sceneRef.current.selectedSatellite.z}<br />
+					<SatelliteInfoBox satelliteData={selectedSatelliteData} />
 				</div>
 			)}
 		</>

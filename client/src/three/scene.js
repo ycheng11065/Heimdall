@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import GlobeCamera from './camera.js';
 import Earth from './globes/earth.js';
-import SatelliteManager from '../visualizations/satellites/satelliteManager.js';
+import SatelliteManager from '../managers/satellites/satelliteManager.js';
 import { GLOBE, EARTH } from '../three/constants.js';
 
 /**
@@ -21,7 +21,7 @@ class GlobeSceneManager {
 	 * Creates a new GlobeSceneManager instance.
 	 * @param {HTMLCanvasElement} canvas - The canvas element where the scene will be rendered.
 	 */
-	constructor(canvas) {
+	constructor(canvas, reactSetSelectedSatellite) {
 		/**
 		 * The canvas element for rendering.
 		 * @type {HTMLCanvasElement}
@@ -71,6 +71,8 @@ class GlobeSceneManager {
 
 		this.selectedSatellite = null;
 		this.selectedMesh = null;
+
+		this.reactSetSelectedSatellite = reactSetSelectedSatellite;
 
 		this._init();
 	}
@@ -127,6 +129,10 @@ class GlobeSceneManager {
 	
 				this.selectedSatellite = clickedMesh.userData;
 				this.selectedMesh = clickedMesh;
+
+				if (this.reactSetSelectedSatellite) {
+					this.reactSetSelectedSatellite(clickedMesh);
+				}
 			} else {
 				// Clicked on empty space
 				if (this.selectedMesh) {
@@ -134,6 +140,10 @@ class GlobeSceneManager {
 				}
 				this.selectedSatellite = null;
 				this.selectedMesh = null;
+
+				if (this.reactSetSelectedSatellite) {
+					this.reactSetSelectedSatellite(null);
+				}
 			}
 		}
 	}
