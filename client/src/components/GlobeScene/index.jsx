@@ -114,8 +114,8 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				x: d.x.toFixed(2),
 				y: d.y.toFixed(2),
 				z: d.z.toFixed(2),
-				latitude: d.latitude.toFixed(4),
-				longitude: d.longitude.toFixed(4),
+				latitude: d.latitude.toFixed(2),
+				longitude: d.longitude.toFixed(2),
 				altitude: d.altitude.toFixed(2),
 			};
 
@@ -123,7 +123,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				const hasChanged = !prev || Object.keys(data).some(k => prev[k] !== data[k]);
 				return hasChanged ? data : prev;
 			});
-		}, 100);
+		}, 300);
 		
 		return () => {
 			window.removeEventListener('resize', handleResize);

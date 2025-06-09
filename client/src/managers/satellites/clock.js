@@ -1,5 +1,5 @@
 class ClockManager {
-    constructor(speedMultiplier = 30) {
+    constructor(speedMultiplier = 1) {
         this.speedMultiplier = speedMultiplier;
         this.simulatedTime = Date.now(); 
         this.previousRealTime = Date.now();

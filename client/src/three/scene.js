@@ -74,6 +74,9 @@ class GlobeSceneManager {
 
 		this.reactSetSelectedSatellite = reactSetSelectedSatellite;
 
+		this.mouseDownPos = null;
+		this.mouseMoved = false;
+
 		this._init();
 	}
 
@@ -96,9 +99,26 @@ class GlobeSceneManager {
 		this.earth = new Earth(this.scene);
 
 		this.satelliteManager = new SatelliteManager(this.scene);
+		
+		this.canvas.addEventListener('mousedown', (e) => {
+			this.mouseDownPos = { x: e.clientX, y: e.clientY };
+			this.mouseMoved = false;
+		});
 
-		this.canvas.addEventListener('click', (event) => {
-			this.selectSatellite(event);
+		this.canvas.addEventListener('mousemove', (e) => {
+			if (!this.mouseDownPos) return;
+			const dx = e.clientX - this.mouseDownPos.x;
+			const dy = e.clientY - this.mouseDownPos.y;
+			if (Math.sqrt(dx * dx + dy * dy) > 4) {
+				this.mouseMoved = true;
+			}
+		});
+
+		this.canvas.addEventListener('mouseup', (e) => {
+			if (this.mouseMoved) {
+				return;
+			}
+			this.selectSatellite(e);
 		});
 	}
 

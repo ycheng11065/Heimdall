@@ -2,7 +2,7 @@ import initWasm from '../wasm/spherekit/pkg/spherekit.js';
 import GlobeSceneManager from './scene.js';
 
 export const setupGlobeScene = async (canvas, reactSetSelectedSatellite) => {
-    await initWasm(); // init wasm module
+    await initWasm();
     
     const globeSceneManager = new GlobeSceneManager(canvas, reactSetSelectedSatellite);
 
