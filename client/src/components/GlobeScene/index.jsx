@@ -60,6 +60,19 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		lakesOpacity: 1.0
 	});
 
+	async function loadSatellites() {
+		if (!sceneRef.current) {
+			return;
+		}
+
+		await sceneRef.current.satelliteManager.clearSatellites();
+
+		const satelliteDTOs = await fetchSatellitesByType(satelliteType.toLowerCase());
+		for (const sat of satelliteDTOs) {
+			await sceneRef.current.satelliteManager.addSatellite(sat);
+		}
+	}
+
 
 	useEffect(() => {
 		if (!canvasRef.current) {
@@ -84,11 +97,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 				sceneRef.current = globeSceneManager;
 				sceneRef.current.startAnimationLoop();
 
-				const satelliteDTOs = await fetchSatellitesByType("oneweb");
-
-				for (const sat of satelliteDTOs) {
-					await sceneRef.current.satelliteManager.addSatellite(sat);
-				}
+				await loadSatellites();
 	
 				sceneRef.current.addUpdateCallback(() => {
 					sceneRef.current.satelliteManager.updateSatellites();
@@ -178,20 +187,11 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 	}, [debugFloats]);
 
 	useEffect(() => {
-		if (!sceneReady || !sceneRef.current) {
-			return;
+		const fetchSatelliteData = async() => {
+			await loadSatellites();
 		}
 
-		const loadSatellite = async () => {
-			await sceneRef.current.satelliteManager.clearSatellites();
-			const satelliteDTOs = await fetchSatellitesByType(satelliteType.toLowerCase());
-			for (const sat of satelliteDTOs) {
-				await sceneRef.current.satelliteManager.addSatellite(sat);
-			}
-		}
-
-		loadSatellite().catch(err => console.error(err));
-
+		fetchSatelliteData();
 	}, [satelliteType])
 
 	return (
