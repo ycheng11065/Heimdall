@@ -21,7 +21,7 @@ const SpeedControl = ({ satelliteManager }) => {
             <label htmlFor="speedSelect" style={{ marginRight: '8px' }}>Speed:</label>
             <select id="speedSelect" value={speed} onChange={handleChange}>
                 <option value={0}>Paused</option>
-                <option value={1}>1x (Real Time)</option>
+                <option value={1}>Live</option>
                 <option value={4}>4x</option>
                 <option value={8}>8x</option>
                 <option value={16}>16x</option>

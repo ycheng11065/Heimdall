@@ -99,7 +99,7 @@ class GlobeSceneManager {
 		this.earth = new Earth(this.scene);
 
 		this.satelliteManager = new SatelliteManager(this.scene);
-		
+
 		this.canvas.addEventListener('mousedown', (e) => {
 			this.mouseDownPos = { x: e.clientX, y: e.clientY };
 			this.mouseMoved = false;
@@ -144,8 +144,8 @@ class GlobeSceneManager {
 				}
 	
 				// Select new satellite
-				clickedMesh.material.color.set(0xffa500); // green highlight for selected
-				clickedMesh.scale.set(2, 2, 2); // make it even bigger
+				clickedMesh.material.color.set(0xffa500);
+				clickedMesh.scale.set(2, 2, 2);
 	
 				this.selectedSatellite = clickedMesh.userData;
 				this.selectedMesh = clickedMesh;

@@ -12,6 +12,7 @@ import DebugMenu from '../DebugMenu/index.jsx';
 import { fetchSatellitesByType } from '../../api/satellite.js';
 // import { updateSatellites } from '../../visualizations/satellites/satelliteManager.js';
 import SpeedControl from '../SpeedControl/index.jsx';
+import SatelliteTypeControl from '../SatelliteTypeControl/index.jsx';
 import SatelliteInfoBox from '../SatelliteInfoBox/index.jsx';
 
 /**
@@ -41,6 +42,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 
 	const selectedSatelliteRef = useRef(null);
 	const [selectedSatelliteData, setSelectedSatelliteData] = useState(null);
+	const [satelliteType, setSatelliteType] = useState("OneWeb");
 	
 	const [debugOptions, setDebugOptions] = useState({
 		wireFrame: false,
@@ -175,6 +177,23 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		earth.setLakesOpacity(lakesOpacity);
 	}, [debugFloats]);
 
+	useEffect(() => {
+		if (!sceneReady || !sceneRef.current) {
+			return;
+		}
+
+		const loadSatellite = async () => {
+			await sceneRef.current.satelliteManager.clearSatellites();
+			const satelliteDTOs = await fetchSatellitesByType(satelliteType.toLowerCase());
+			for (const sat of satelliteDTOs) {
+				await sceneRef.current.satelliteManager.addSatellite(sat);
+			}
+		}
+
+		loadSatellite().catch(err => console.error(err));
+
+	}, [satelliteType])
+
 	return (
 		<>
 			<canvas ref={canvasRef} style={{
@@ -201,12 +220,25 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 
 			{sceneReady && sceneRef.current?.satelliteManager && (
 				<div style={{
+					width: '20rem',
 					position: 'absolute',
 					top: '16px',
 					right: '16px',
 					zIndex: 10
 				}}>
 					<SpeedControl satelliteManager={sceneRef.current.satelliteManager} />
+				</div>
+			)}
+
+			{sceneReady && (
+				<div style={{
+					width: '20rem',
+					position: 'absolute',
+					top: '35px',
+					right: '16px',
+					zIndex: 10
+				}}>
+					<SatelliteTypeControl type={satelliteType} setType={setSatelliteType}/>
 				</div>
 			)}
 
