@@ -43,6 +43,8 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 	const selectedSatelliteRef = useRef(null);
 	const [selectedSatelliteData, setSelectedSatelliteData] = useState(null);
 	const [satelliteType, setSatelliteType] = useState("OneWeb");
+
+	const [speed, setSpeed] = useState(1);
 	
 	const [debugOptions, setDebugOptions] = useState({
 		wireFrame: false,
@@ -66,6 +68,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 		}
 
 		await sceneRef.current.satelliteManager.clearSatellites();
+		setSpeed(1);
 
 		const satelliteDTOs = await fetchSatellitesByType(satelliteType.toLowerCase());
 		for (const sat of satelliteDTOs) {
@@ -226,7 +229,7 @@ const GlobeScene = ({ enableDebugMenu = false }) => {
 					right: '16px',
 					zIndex: 10
 				}}>
-					<SpeedControl satelliteManager={sceneRef.current.satelliteManager} />
+					<SpeedControl speed={speed} setSpeed={setSpeed} satelliteManager={sceneRef.current.satelliteManager} />
 				</div>
 			)}
 

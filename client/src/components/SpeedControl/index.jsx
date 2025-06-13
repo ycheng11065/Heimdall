@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-const SpeedControl = ({ satelliteManager }) => {
-    const [speed, setSpeed] = useState(1);
+const SpeedControl = ({ speed, setSpeed, satelliteManager }) => {
+    // const [speed, setSpeed] = useState(1);
 
     const handleChange = (event) => {
         const newSpeed = parseFloat(event.target.value);
